@@ -5,6 +5,7 @@ breed [ erics eric ]
 
 erics-own [
   speed
+  target
 ]
 
 to setup
@@ -24,6 +25,8 @@ to setup-erics
     set color white
     set label-color black
     set speed turtle-speed
+
+    set target nobody
   ]
 end
 
@@ -46,9 +49,7 @@ to go
 end
 
 to move-erics
-  ask erics [
-    forward speed
-  ]
+  ask erics [ forward speed ]
 end
 
 to check-turtle-collision
@@ -80,7 +81,8 @@ to attract-erics
   ask erics [
     let closets-particle min-one-of particles [distance myself]
     face closets-particle
-    set speed (turtle-speed * 1 / (distance closets-particle))
+    let particle-distance distance closets-particle
+    set speed (turtle-speed * 1 / (particle-distance * particle-distance))
 
     if distance closets-particle < size [ die ]
   ]
@@ -139,7 +141,7 @@ max-start-turtles
 max-start-turtles
 0
 500
-500.0
+248.0
 1
 1
 NIL
@@ -170,8 +172,8 @@ SLIDER
 turtle-speed
 turtle-speed
 0.00001
-0.001
-9.1E-4
+0.1
+0.07961
 0.0001
 1
 NIL
