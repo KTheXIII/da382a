@@ -30,11 +30,17 @@ to setup
   ask voters [
     setup-heatmap
   ]
+
+  ask one-of voters [
+   update-heatmap one-of other voters
+  ]
   reset-ticks
 end
 
 to setup-heatmap
-  let leheatmap array:from-list n-values (11 * 11) [random int 10]
+  let leheatmap array:from-list n-values (11 * 11) [0]
+  array:set leheatmap random int (11 * 11) random int 11
+
   let summass list 0 0
   foreach (n-values 11 [i -> i]) [
     y -> foreach (n-values 11 [j -> j]) [
@@ -61,6 +67,8 @@ to setup-heatmap
 end
 
 to update-heatmap [other-heatmap]
+  let our-heatmap beliefs-of-type "attitude-plane"
+  output-print our-heatmap
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
