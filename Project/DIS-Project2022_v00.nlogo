@@ -220,7 +220,15 @@ end
 ; Sum the heat (x, y, z) conviction on our heatmap.
 ; This applies to the current agent.
 to sum-heatmap [heat]
+  let row attitude_rows
+  let heatmap beliefs-of-type "attitude-plane"
+  let hx item 0 heat  ; x
+  let hy item 1 heat  ; y
+  let hz item 2 heat  ; z
 
+  let index hy * row + hx
+  let current_z array:item heatmap index
+  array:set heatmap index (current_z + hz)
 end
 
 ; Check if the incoming attitude message is within a range
