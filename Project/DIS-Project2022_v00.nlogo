@@ -5,6 +5,10 @@
 ; 2022-04-07 Initial Template by Gion K Svedberg (gks)
 ; 2022-04-07 people and time: Nour Ismail, Drilon Sadiku, Nezar Sheikhi, Gabriella Pantic, Alban Islami
 ; 2022-04-13 Begin of first integration version 00 towards a common template, gks
+; 2022-04-14 Implements attitude position and conviction value calculation. New conviction value
+;            can be later sum if it pass the neighbour check procudure which uses Manhattan distancing.
+;
+;            Authors: Pratchaya Khansomboon (PK), Eric Lundin (EL), Marcus Linné (ML), Linnéa Mörk (LM)
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
