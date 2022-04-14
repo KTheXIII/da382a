@@ -15,15 +15,14 @@ __includes [
     ;"proactive.nls"
   ;
   ;
-
 ]
 ; ********************end included files ********
 
 ; ************ EXTENSIONS *****************
 extensions [
-; vid ; used for recording of the simulation
-array
-table
+  ; vid ; used for recording of the simulation
+  array
+  table
 ]
 ; ********************end extensions ********
 
@@ -31,18 +30,21 @@ table
 ; ************ BREEDS OF TURTLES *****************
 breed [voters voter]  ;
 
-; ********************end breed of turtles ********
+; ******************** end breed of turtles ********
 
 
 ; ************* GLOBAL VARIABLES *****************
 globals [
-   time
-   flagNewWeek ; true if it is a new week
-   flagNewMonth ; true if it is a new month
-   flagNewYear ; true if it is a new year
-   day week month year
-   old_day old_week old_month old_year
+  time
+  flagNewWeek ; true if it is a new week
+  flagNewMonth ; true if it is a new month
+  flagNewYear ; true if it is a new year
+  day week month year
+  old_day old_week old_month old_year
 
+  ; attitude plane matrix width and height
+  attitude_rows
+  attitude_cols
 ]
 
 ; ******************end global variables ***********
@@ -52,7 +54,7 @@ globals [
 turtles-own [
   beliefs
   intentions
-  ; incoming-queue
+  incoming-queue
   current_status
   current_state
   current_goal
@@ -65,7 +67,7 @@ voters-own [
   levelOfEducation
   flagEmployed
   wage
-  ]
+]
 ; *********************end agent-specific variables *************
 
 
@@ -79,6 +81,9 @@ to setup
   set flagNewMonth false
   set flagNewYear false
 
+  set attitude_rows 3
+  set attitude_cols 5
+
   ; Create the regions
 
 
@@ -88,15 +93,19 @@ to setup
         ; setup of agents
             ; create the agents in the different regions
             ; createvoters-region
-            setup-voters ;initial creation for right now
+            setup-voters ; initial creation for right now
             ; set the age of the agents
             ; set the educational level of the agents
             ; set the status of employed or unemployed of the agents
             ; set the monthly wage of the employed agents
-            ; set the political attitudes of the agents
+            setup-heatmap ; set the political attitudes of the agents
         ;-end setup of agents
   ; --- end create and setup voters
   ;
+  ask one-of voters [
+    let our-heatmap beliefs-of-type "attitude-plane"
+    output-print our-heatmap
+  ]
   reset-ticks
 end
 
@@ -138,8 +147,8 @@ to go
   ; Cyclic execution of what the agents are supposed to do
   ; Trying to implement a Hybrid-Agent architecture with a ractive part running the intentions on
   ; the intention stack and the proactive part with a deliberation of status, states and goals
-;
- ; Ask agents to do something.
+  ;
+  ; Ask agents to do something.
   ask voters [
     process-messages ; process messages in the message-queue.
     perceive-environment ; updates beliefs about the environment
@@ -149,13 +158,13 @@ to go
     proactive-behavior ; finite state machine for the proactive behavior
   ]
 
-  ;----- End Agents to-go part ----------------------------------------
+  ; ----- End Agents to-go part ----------------------------------------
   ;
   tick
 
   ; show/hide things
 end
-;************************end to go/starting part ***********
+; ************** end to go/starting part ***************
 
 
 ; ************** FUNCTION and REPORT PART **************
@@ -169,19 +178,66 @@ to setup-voters
   ]
 end
 
+to setup-heatmap
+  ask voters [
+    let rows attitude_rows
+    let cols attitude_cols
+    let leheatmap array:from-list n-values (cols * rows) [0]
+    add-belief create-belief "attitude-plane" leheatmap
+  ]
+end
+
+to-report center-of-mass [heatmap]
+  let rows attitude_rows
+  let cols attitude_cols
+
+  let sum_mass list 0 0
+  foreach (n-values rows [i -> i]) [
+    y -> foreach (n-values cols [j -> j]) [
+      x ->
+      let index y * rows + x
+      let m array:item heatmap index
+
+      let mx m * (x + 1)
+      let my m * (y + 1)
+
+      let sx item 0 sum_mass
+      let sy item 1 sum_mass
+      set sum_mass list (mx + sx) (my + sy)
+    ]
+  ]
+  let smx item 0 sum_mass
+  let smy item 1 sum_mass
+
+  let x round (smx / (rows * cols) * cols)
+  let y round (smy / (rows * cols) * rows)
+  let z array:item heatmap (y * rows + x)
+  report (list x y z)
+end
+
+to-report sum-heatmap [heat heatmap]
+
+end
+
+to react-heatmap
+
+end
+
+to-report heatmap-eval
+  report true
+end
+
 to process-messages
-; reads and interprets all the messages on the message-queue (might need a while-loop)
+  ; reads and interprets all the messages on the message-queue (might need a while-loop)
   ; -> updates beliefs and variables
   ; -> adds intentions (=reactive procedures) onto the intention stack
+  add-intention "react-heatmap" "heatmap-eval"
 end
 
-to perceive-environment
-; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
+to perceive-environment ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
 end
 
-
-
-to proactive-behavior ; move this part into an own file "proactive.nls" and include it under includes
+to proactive-behavior   ; move this part into an own file "proactive.nls" and include it under includes
 end
 
 ;************** end function and report part **************
@@ -233,7 +289,7 @@ num-agents
 num-agents
 5
 100
-33.0
+45.0
 1
 1
 NIL
