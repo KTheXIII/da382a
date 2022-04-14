@@ -1,0 +1,80 @@
+; 2022-04-14 Branch of "Chapter 5," week 15, TASK 5 with implementing the state machine and proactive parts. (Mouad, Reem, Petter)
+; 2022-04-14 This code is included in the project.
+
+
+to proactive-behavior ; move this part into an own file "proactive.nls" and include it under includes
+  run current_state
+end
+
+; Sets in ini
+to setup-proactive
+  (ifelse
+    current_status = "child" [
+      set current_state [ -> schooling]
+    ]
+    current_status = "adult" and flagEmployed [
+      set current_state [ -> has-a-job ]
+    ]
+    current_status = "adult" and not flagEmployed [
+      set current_state [-> has-no-job ]
+    ]
+    current_status = "elderly" [
+        set current_state [-> at-elderly-home]
+    ][
+        ; No default
+        print "Error no status"
+    ])
+end
+
+; -- Children  --
+to schooling
+  print "Schooling state"
+  print "Understand the world surronding!"
+end
+
+; -- Adults --
+to has-a-job
+  print "Has a job!"
+  if not flagEmployed [
+    set current_state [ -> has-no-job ]
+  ]
+end
+
+; Adult, do not have a job. 
+to has-no-job
+  print "Applying for jobs"
+  if flagEmployed
+  [set current_state [ -> has-a-job ]]
+  
+  ; Update this 
+  ;if conditions for feel-confirmed.
+  ;[]
+end
+
+to feel-confirmed
+  ;let tmp_advance-in-career true ; just a for testing... check: education-level='PoG' and increase(old_BW,BW) > 5%  
+  if levelOfEducation > 0.05 and ( wage / old_wage) > 1.05 [
+    set current_state [-> gain-status]
+  ]
+  
+  ; if conditions for "have-friends state"
+  ;[]
+end
+
+to gain-status
+  
+end
+
+to have-friends
+  
+end
+
+; Unemployed trying to find like minded people 
+to find-like-minded
+  
+end
+
+; -- Elderly --
+to at-elderly-home
+  print "At elderly home!"
+end

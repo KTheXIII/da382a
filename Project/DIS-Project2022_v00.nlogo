@@ -5,6 +5,10 @@
 ; 2022-04-07 Initial Template by Gion K Svedberg (gks)
 ; 2022-04-07 people and time: Nour Ismail, Drilon Sadiku, Nezar Sheikhi, Gabriella Pantic, Alban Islami
 ; 2022-04-13 Begin of first integration version 00 towards a common template, gks
+; -------------------
+; 2022-04-14 Branch of "Chapter 5," week 15, TASK 5 with implementing the state machine and proactive parts.
+; 2022-04-14 Parts of the code are moved to proactive.nls and the rest is in perceive-environment.
+; Mouad, Reem, Petter
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
@@ -12,7 +16,7 @@ __includes [
     "regions.nls"
     ;"communication.nls"
     ;"setupvoters.nls"
-    ;"proactive.nls"
+    "proactive.nls"
   ;
   ;
 
@@ -65,6 +69,7 @@ voters-own [
   levelOfEducation
   flagEmployed
   wage
+  old_wage
   ]
 ; *********************end agent-specific variables *************
 
@@ -138,8 +143,8 @@ to go
   ; Cyclic execution of what the agents are supposed to do
   ; Trying to implement a Hybrid-Agent architecture with a ractive part running the intentions on
   ; the intention stack and the proactive part with a deliberation of status, states and goals
-;
- ; Ask agents to do something.
+  ;
+  ; Ask agents to do something.
   ask voters [
     process-messages ; process messages in the message-queue.
     perceive-environment ; updates beliefs about the environment
@@ -160,30 +165,48 @@ end
 
 ; ************** FUNCTION and REPORT PART **************
 to setup-voters
-   create-voters num-agents [
+   create-voters 1 [
     setxy random-xcor random-ycor
     set shape "person" set size 2
     set intentions []
     set beliefs []
     add-belief create-belief "age" random 80
+
+    ; Initial status and state
+    set current_status "adult"
+    set flagEmployed false
+    setup-proactive
   ]
 end
 
 to process-messages
-; reads and interprets all the messages on the message-queue (might need a while-loop)
+  ; reads and interprets all the messages on the message-queue (might need a while-loop)
   ; -> updates beliefs and variables
   ; -> adds intentions (=reactive procedures) onto the intention stack
 end
 
 to perceive-environment
-; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
+  ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
+
+  ; Update current_status in your code.
+  ; set flagEmployed true ; update this to true or false in your code.
+
+
+  ; if changed status, set new initial state
+  ; call proactive-behavior
+
+  if flagNewYear [
+    ;print "New Year!"
+
+    ; Increase job wage, if status is adult and not employed.
+    if flagEmployed [
+    set old_wage wage
+    let yearly_increase random-float 0.08
+    set yearly_increase yearly_increase + 1
+    set wage wage * yearly_increase
+    ]
+  ]
 end
-
-
-
-to proactive-behavior ; move this part into an own file "proactive.nls" and include it under includes
-end
-
 ;************** end function and report part **************
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -207,8 +230,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -233,7 +256,7 @@ num-agents
 num-agents
 5
 100
-33.0
+70.0
 1
 1
 NIL
@@ -283,6 +306,23 @@ tickNum
 1
 0
 Number
+
+BUTTON
+112
+120
+175
+153
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
