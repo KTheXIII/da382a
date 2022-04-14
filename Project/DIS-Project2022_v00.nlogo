@@ -245,10 +245,7 @@ to-report neighbour-check [message heatmap]
   let my item 1 message
 
   let dist_squared (apx - mx) * (apx - mx) + (apy - my) * (apy - my)
-
-  ifelse dist_squared <= 1
-  [report true]
-  [report false]
+  report dist_squared <= 1
 end
 
 to react-heatmap
