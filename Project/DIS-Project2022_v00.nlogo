@@ -8,13 +8,11 @@
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
-    "bdi.nls"
-    "regions.nls"
-    ;"communication.nls"
-    ;"setupvoters.nls"
-    ;"proactive.nls"
-  ;
-  ;
+  "bdi.nls"
+  "regions.nls"
+  ;"communication.nls"
+  ;"setupvoters.nls"
+  ;"proactive.nls"
 ]
 ; ********************end included files ********
 
@@ -136,7 +134,6 @@ to go
 
   ; Sending political messages to random selection of agents
 
-
   ; Changing the status of some random unemployed adults to employed
 
   ; Changing the status of some random employed adults to employed
@@ -169,7 +166,7 @@ end
 
 ; ************** FUNCTION and REPORT PART **************
 to setup-voters
-   create-voters num-agents [
+  create-voters num-agents [
     setxy random-xcor random-ycor
     set shape "person" set size 2
     set intentions []
@@ -178,6 +175,7 @@ to setup-voters
   ]
 end
 
+; Generate the attitude plane heatmap and set it in the beliefs hashmap.
 to setup-heatmap
   ask voters [
     let rows attitude_rows
@@ -187,6 +185,10 @@ to setup-heatmap
   ]
 end
 
+; Get the attitude plane current coordinate and the calculated
+; conviction based on the attitude plane's heatmap.
+;
+; return [x y z] where (x, y) is the position and the z is the conviction value.
 to-report center-of-mass [heatmap]
   let rows attitude_rows
   let cols attitude_cols
@@ -198,8 +200,8 @@ to-report center-of-mass [heatmap]
       let index y * rows + x
       let m array:item heatmap index
 
-      let mx m * (x + 1)
-      let my m * (y + 1)
+      let mx m * x
+      let my m * y
 
       let sx item 0 sum_mass
       let sy item 1 sum_mass
@@ -215,12 +217,33 @@ to-report center-of-mass [heatmap]
   report (list x y z)
 end
 
-to-report sum-heatmap [heat heatmap]
+; Sum the heat (x, y, z) conviction on our heatmap.
+; This applies to the current agent.
+to sum-heatmap [heat]
 
 end
 
-to react-heatmap
+; Check if the incoming attitude message is within a range
+; of our current position in the attitude plane
+;
+; true:  message is valid for attitude-plane summation
+; false: message not satisfy the attitude-plane summation
+to-report neighbour-check [message heatmap]
+  let attitude_plane center-of-mass heatmap
+  let apx item 0 attitude_plane
+  let apy item 1 attitude_plane
 
+  let mx item 0 message
+  let my item 1 message
+
+  let dist_squared (apx - mx) * (apx - mx) + (apy - my) * (apy - my)
+
+  ifelse dist_squared <= 1
+  [report true]
+  [report false]
+end
+
+to react-heatmap
 end
 
 to-report heatmap-eval
