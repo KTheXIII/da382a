@@ -244,14 +244,24 @@ to-report neighbour-check [message heatmap]
   let mx item 0 message
   let my item 1 message
 
-  let dist_squared (apx - mx) * (apx - mx) + (apy - my) * (apy - my)
-  report dist_squared <= 1
+;  ; Euclidean distance
+;  let dist_euclidean (apx - mx) * (apx - mx) + (apy - my) * (apy - my)
+;  report dist_euclidean <= 1
+
+  ; Manhattan distance
+  let dist_x abs(apx - mx)
+  let dist_y abs(apy - my)
+
+  report dist_x <= 1 xor dist_y <= 1
 end
 
+; This controls our reactive layer.
 to react-heatmap
+  let conviction_queue beliefs-of-type "incoming-conviction"
 end
 
 to-report heatmap-eval
+  let conviction_queue beliefs-of-type "incoming-conviction"
   report true
 end
 
@@ -259,6 +269,16 @@ to process-messages
   ; reads and interprets all the messages on the message-queue (might need a while-loop)
   ; -> updates beliefs and variables
   ; -> adds intentions (=reactive procedures) onto the intention stack
+
+  ; Logic for adding incoming conviction value into the our current agent
+  ; conviction queue for later processing. This is required because the
+  ; intention stack cannot store data.
+  let conviction_queue (list [])
+  if exist-beliefs-of-type "incoming-conviction"
+  [set conviction_queue beliefs-of-type "incoming-conviction"]
+  let last_index length conviction_queue
+
+  add-belief create-belief "incoming-conviction" conviction_queue
   add-intention "react-heatmap" "heatmap-eval"
 end
 
