@@ -65,6 +65,7 @@ voters-own [
   levelOfEducation
   flagEmployed
   wage
+  region
   ]
 ; *********************end agent-specific variables *************
 
@@ -90,7 +91,7 @@ to setup
             ; createvoters-region
             setup-voters ;initial creation for right now
             ; set the age of the agents
-            ; set the educational level of the agents
+            setup-educationLevel ; set the educational level of the agents
             ; set the status of employed or unemployed of the agents
             ; set the monthly wage of the employed agents
             ; set the political attitudes of the agents
@@ -166,7 +167,114 @@ to setup-voters
     set intentions []
     set beliefs []
     add-belief create-belief "age" random 80
+    ask voters[
+      set region random 3
+      set levelOfEducation 0
+    ]
   ]
+end
+
+to setup-educationLevel
+
+  let numOfAgentsInReg1 0
+  let numOfAgentsInReg2 0
+  let numOfAgentsInReg3 0
+
+  let Reg1 0
+  let Reg2 0
+  let Reg3 0
+
+  ask voters [
+    (ifelse region = 0 [set numOfAgentsInReg1 numOfAgentsInReg1 + 1]
+      region = 1 [set numOfAgentsInReg2 numOfAgentsInReg2 + 1]
+      region = 2 [set numOfAgentsInReg3 numOfAgentsInReg3 + 1]
+    )
+  ]
+
+  ;Region 1 numOfAgentsInRegion * education %
+  let numOfPrG1 numOfAgentsInReg1 * 0.2
+  let numOfG1 numOfAgentsInReg1 * 0.52
+  let numOfPoG1 numOfAgentsInReg1 * 0.24
+  set numOfPrG1 floor numOfPrG1
+  set numOfG1 floor numOfG1
+  set numOfPoG1 floor numOfPoG1
+
+  ;Region 2 numOfAgentsInRegion * education %
+  let numOfPrG2 numOfAgentsInReg2 * 0.14
+  let numOfG2 numOfAgentsInReg2 * 0.56
+  let numOfPoG2 numOfAgentsInReg2 * 0.27
+  set numOfPrG2 floor numOfPrG2
+  set numOfG2 floor numOfG2
+  set numOfPoG2 floor numOfPoG2
+
+  ;Region 3 numOfAgentsInRegion * education %
+  let numOfPrg3 numOfAgentsInReg3 * 0.05
+  let numOfG3 numOfAgentsInReg3 * 0.22
+  let numOfPoG3 numOfAgentsInReg3 * 0.7
+  set numOfPrG3 floor numOfPrG3
+  set numOfG3 floor numOfG3
+  set numOfPoG3 floor numOfPoG3
+
+
+  ; Region 1 PrG = 1, G = 2, PoG = 3
+  ask voters with [region = 0 and levelOfEducation = 0] [
+    if numOfPrg1 > 0[
+      set levelOfEducation 1
+      set numOfPrG1 numOfPrG1 - 1
+      set Reg1 Reg1 + 1
+    ]
+    if numOfG1 > 0[
+      set levelOfEducation 2
+      set numOfG1 numOfG1 - 1
+    ]
+    if numOfPog1 > 0[
+      set levelOfEducation 3
+      set numOfPoG1 numOfPoG1 - 1
+    ]
+  ]
+
+  ; Region 2 PrG = 1, G = 2, PoG = 3
+  ask voters with [region = 1 and levelOfEducation = 0] [
+    if numOfPrg2 > 0[
+      set levelOfEducation 1
+      set numOfPrG2 numOfPrG2 - 1
+      set Reg2 Reg2 + 1
+    ]
+    if numOfG1 > 0[
+      set levelOfEducation 2
+      set numOfG2 numOfG2 - 1
+    ]
+    if numOfPog1 > 0[
+      set levelOfEducation 3
+      set numOfPoG2 numOfPoG2 - 1
+    ]
+  ]
+
+  ; Region 3 PrG = 1, G = 2, PoG = 3
+  ask voters with [region = 2 and levelOfEducation = 0] [
+    if numOfPrg3 > 0[
+      set levelOfEducation 1
+      set numOfPrG3 numOfPrG3 - 1
+      set Reg3 Reg3 + 1
+    ]
+    if numOfG1 > 0[
+      set levelOfEducation 2
+      set numOfG3 numOfG3 - 1
+    ]
+    if numOfPog1 > 0[
+      set levelOfEducation 3
+      set numOfPoG3 numOfPoG3 - 1
+    ]
+  ]
+
+  ;Testningar
+  show numOfAgentsInReg1
+  show numOfAgentsInReg2
+  show numOfAgentsInReg3
+  show Reg1
+  show Reg2
+  show Reg3
+
 end
 
 to process-messages
@@ -233,7 +341,7 @@ num-agents
 num-agents
 5
 100
-33.0
+100.0
 1
 1
 NIL
