@@ -1,40 +1,35 @@
-# ┃ Outputs
-# ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫ #
-
-## Binaries
+# Binaries
 **/bin
 **/obj
 
-# ┃ Generated Workspaces
-# ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫ #
+# NetLogo
+*.tmp.nlogo
 
-## Xcode
+# Xcode
 *.xcworkspace
 *.xcodeproj
 
-## Visual Studio
+# Visual Studio
 *.sln
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 .vs
 
-## Makefile
+# Makefile
 Makefile
 *.make
 
-## nvim
+# nvim
 .ccls
 .ccls-cache
 compile_commands.json
 
-## Visual Studio Code
+# Visual Studio Code
 .vscode
 
-# ┃ System Files
-# ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫ #
-
-## macOS
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
+
