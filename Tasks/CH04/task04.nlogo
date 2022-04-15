@@ -38,30 +38,36 @@ to setup
 end
 
 to setup-heatmap
-  let leheatmap array:from-list n-values (11 * 11) [0]
-  array:set leheatmap random int (11 * 11) random int 11
+  let rows 11
+  let cols 11
+  let max_heat 11
 
-  let summass list 0 0
-  foreach (n-values 11 [i -> i]) [
-    y -> foreach (n-values 11 [j -> j]) [
+  let leheatmap array:from-list n-values (rows * cols) [0]
+  array:set leheatmap random int (rows * cols) random int max_heat
+
+  let sum_mass 0
+  let sum_particles list 0 0
+  foreach (n-values rows [i -> i]) [
+    y -> foreach (n-values cols [j -> j]) [
       x ->
-      let index y * 11 + x
+      let index y * rows + x
       let m array:item leheatmap index
 
-      let mx m * (x + 1)
-      let my m * (y + 1)
+      let mx m * x
+      let my m * y
 
-      let sx item 0 summass
-      let sy item 1 summass
-      set summass list (mx + sx) (my + sy)
+      let sx item 0 sum_particles
+      let sy item 1 sum_particles
+      set sum_particles list (mx + sx) (my + sy)
+      set sum_mass (sum_mass + m)
     ]
   ]
-  let smx item 0 summass
-  let smy item 1 summass
-
-  set smx round (smx / (11 * 11) * 11)
-  set smy round (smy / (11 * 11) * 11)
-  setxy smx smy
+  let p_x item 0 sum_particles
+  let p_y item 1 sum_particles
+  if sum_mass = 0 [set sum_mass 1]
+  set p_x round (p_x / sum_mass)
+  set p_y round (p_y / sum_mass)
+  setxy p_x p_y
 
   add-belief create-belief "attitude-plane" leheatmap
 end
