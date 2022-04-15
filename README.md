@@ -40,9 +40,27 @@ w15t02-a_pk
 w15t02_el
 ```
 
+## Archive
+
+You can use `git-archive` to create `zip` file easily with the command below.
+
+```
+git archive --format=zip HEAD:Project -o {target}.zip
+```
+
+`{target}` is the output name.
+
+Example
+
+```
+git archive --format=zip HEAD:Project -o ~/Downloads/Project.zip
+```
+
+where `Project.zip` is the name and anything before is the path.
+
 ## About
 
 This project is not responsible if the group has not sent in their own code to
 the canvas. What this project is for is to ease the collaborations between the
 group members by taking advantage of the `git` version control system.
-
+Version
