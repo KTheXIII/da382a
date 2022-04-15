@@ -1,0 +1,119 @@
+#include <iostream>
+#include <cstdint>
+#include <vector>
+#include <random>
+#include <iomanip>
+#include <string>
+#include <chrono>
+#include <sstream>
+#include <cstddef>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+namespace mas {
+template <typename T>
+struct vec2 {
+    T x;
+    T y;
+};
+
+using vec2f = vec2<double>;
+using vec2us = vec2<std::size_t>;
+
+template <typename T>
+class heatmap {
+  public:
+    heatmap(std::size_t const& width, std::size_t const& height)
+        : m_width(width), m_height(height) {
+        m_data.reserve(m_width * m_height);
+    }
+
+    template <typename callable>
+    auto init(callable fn) {
+        std::generate_n(std::begin(m_data), m_width * m_height, [&] {
+            return fn();
+        });
+    }
+    auto data() -> std::vector<T>& { return m_data; }
+
+    auto set(std::size_t x, std::size_t y, T value) -> bool {
+        if (x > m_width - 1 || y > m_height - 1)
+            return false;
+
+        auto i = y * m_height + x;
+        m_data[i] = value;
+        return true;
+    }
+
+    auto center() -> vec2us {
+        vec2f sum{};
+        auto sum_mass = 0.0;
+        for (std::size_t i = 0; i < m_height; i++) {
+            for (std::size_t j = 0; j < m_width; j++) {
+                auto mass = m_data[i * m_height + j];
+                sum.x += double(j) * mass;
+                sum.y += double(i) * mass;
+                sum_mass += mass;
+            }
+        }
+        return {
+            std::size_t(std::round(sum.x / sum_mass)),
+            std::size_t(std::round(sum.y / sum_mass))
+        };
+    }
+
+    auto to_str(std::size_t const& precision = 3) const -> std::string {
+        std::stringstream ss;
+        ss << "[\n";
+        for (std::size_t i = 0; i < m_height; i++) {
+            ss << "  [ ";
+            for (std::size_t j = 0; j < m_width; j++) {
+                auto index = i * m_height + j;
+                ss << std::fixed << std::setprecision(precision) << m_data[index];
+                if (j < m_width - 1) ss << ", ";
+            }
+            ss << " ],\n";
+        }
+        ss << "]";
+        return ss.str();
+    }
+
+  private:
+    std::size_t m_width;
+    std::size_t m_height;
+
+    std::vector<T> m_data{};
+};
+
+}
+
+auto main([[maybe_unused]]std::int32_t argc, [[maybe_unused]]char const* argv[]) -> std::int32_t {
+    constexpr std::size_t ROWS = 10;
+    constexpr std::size_t COLS = 10;
+    //constexpr std::size_t AGENT_COUNT = 10;
+
+    //std::random_device rdev{};
+    //std::mt19937 rng{rdev()};
+    std::mt19937 rng{1};
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    auto rand_num = [&] {
+        return dist(rng);
+    };
+
+    std::cout << rand_num() << "\n";
+    mas::heatmap<double> heat{ROWS, COLS};
+    //heat.init([]{ return 0.0; });
+    heat.init(rand_num);
+    //heat.set(0, 5, 0.5);
+    //std::cout << heat.to_str() << "\n";
+
+    auto start = std::chrono::high_resolution_clock::now();
+    auto cofm  = heat.center();
+    auto duration = std::chrono::high_resolution_clock::now() - start;
+    std::cout << cofm.x << ", " << cofm.y << "\n";
+    std::cout << "time: " << std::chrono::duration_cast<std::chrono::microseconds>(duration).count() << " us\n";
+
+    return 0;
+}
+
