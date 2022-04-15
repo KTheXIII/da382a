@@ -9,6 +9,7 @@
 ;            can be later sum if it pass the neighbour check procudure which uses Manhattan distancing.
 ;
 ;            Authors: Pratchaya Khansomboon (PK), Eric Lundin (EL), Marcus Linné (ML), Linnéa Mörk (LM)
+; 2022-04-15 Fix center of mass calculation, PK
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
@@ -104,10 +105,10 @@ to setup
         ;-end setup of agents
   ; --- end create and setup voters
   ;
-  ask one-of voters [
-    let our-heatmap beliefs-of-type "attitude-plane"
-    output-print our-heatmap
-  ]
+;  ask one-of voters [
+;    let our-heatmap beliefs-of-type "attitude-plane"
+;    output-print our-heatmap
+;  ]
   reset-ticks
 end
 
@@ -184,8 +185,11 @@ to setup-heatmap
   ask voters [
     let rows attitude_rows
     let cols attitude_cols
-    let leheatmap array:from-list n-values (cols * rows) [0]
-    add-belief create-belief "attitude-plane" leheatmap
+    let max_heat 10
+
+    let heatmap array:from-list n-values (cols * rows) [0]
+;    array:set heatmap random int (rows * cols) random int max_heat
+    add-belief create-belief "attitude-plane" heatmap
   ]
 end
 
@@ -197,7 +201,8 @@ to-report center-of-mass [heatmap]
   let rows attitude_rows
   let cols attitude_cols
 
-  let sum_mass list 0 0
+  let sum_mass 0
+  let sum_particles list 0 0
   foreach (n-values rows [i -> i]) [
     y -> foreach (n-values cols [j -> j]) [
       x ->
@@ -207,16 +212,15 @@ to-report center-of-mass [heatmap]
       let mx m * x
       let my m * y
 
-      let sx item 0 sum_mass
-      let sy item 1 sum_mass
-      set sum_mass list (mx + sx) (my + sy)
+      let sx item 0 sum_particles
+      let sy item 1 sum_particles
+      set sum_particles list (mx + sx) (my + sy)
+      set sum_mass (sum_mass + m)
     ]
   ]
-  let smx item 0 sum_mass
-  let smy item 1 sum_mass
-
-  let x round (smx / (rows * cols) * cols)
-  let y round (smy / (rows * cols) * rows)
+  if sum_mass = 0 [set sum_mass 1]
+  let x round (item 0 sum_particles / sum_mass)
+  let y round (item 1 sum_particles / sum_mass)
   let z array:item heatmap (y * rows + x)
   report (list x y z)
 end
