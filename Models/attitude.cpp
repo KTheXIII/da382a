@@ -16,6 +16,15 @@ template <typename T>
 struct vec2 {
     T x;
     T y;
+
+    auto str() const -> std::string {
+        std::stringstream ss;
+        ss << "vec2 { ";
+        ss << "x: " << x << ", ";
+        ss << "y: " << y;
+        ss << " }";
+        return ss.str();
+    }
 };
 
 using vec2f = vec2<double>;
@@ -67,7 +76,7 @@ class heatmap {
         };
     }
 
-    auto to_str(std::size_t const& precision = 3) const -> std::string {
+    auto str(std::size_t const& precision = 3) const -> std::string {
         std::stringstream ss;
         ss << "[\n";
         for (std::size_t i = 0; i < m_height; i++) {
@@ -110,12 +119,11 @@ auto main([[maybe_unused]]std::int32_t argc, [[maybe_unused]]char const* argv[])
     auto start = std::chrono::high_resolution_clock::now();
     auto cofm  = heat.center();
     auto duration = std::chrono::high_resolution_clock::now() - start;
-    std::cout << cofm.x << ", " << cofm.y << "\n";
+    std::cout << cofm.str() << "\n";
     std::cout << "time: " << std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() << " ns\n";
 
     constexpr std::size_t CHANNELS = 3;
     std::uint8_t* heatmap = new std::uint8_t[ROWS * COLS * CHANNELS];
-    //std::size_t image_index = 0;
     for (std::size_t i = 0; i < ROWS; i++) {
         for (std::size_t j = 0; j < COLS; j++) {
             auto image_index = i * ROWS * CHANNELS + j * CHANNELS;
@@ -128,7 +136,7 @@ auto main([[maybe_unused]]std::int32_t argc, [[maybe_unused]]char const* argv[])
         }
     }
 
-    stbi_write_png("heatmap.png", ROWS, COLS, CHANNELS, heatmap, COLS * CHANNELS);
+    stbi_write_png("./bin/heatmap.png", ROWS, COLS, CHANNELS, heatmap, COLS * CHANNELS);
 
     delete [] heatmap;
 
