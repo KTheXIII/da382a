@@ -21,6 +21,10 @@ struct vec2 {
 using vec2f = vec2<double>;
 using vec2us = vec2<std::size_t>;
 
+auto lerp(double a, double b, double ratio) -> double {
+    return (1.0 - ratio) * a + ratio * b;
+}
+
 template <typename T>
 class heatmap {
   public:
@@ -100,19 +104,33 @@ auto main([[maybe_unused]]std::int32_t argc, [[maybe_unused]]char const* argv[])
     auto rand_num = [&] {
         return dist(rng);
     };
-
-    std::cout << rand_num() << "\n";
     mas::heatmap<double> heat{ROWS, COLS};
-    //heat.init([]{ return 0.0; });
     heat.init(rand_num);
-    //heat.set(0, 5, 0.5);
-    //std::cout << heat.to_str() << "\n";
 
     auto start = std::chrono::high_resolution_clock::now();
     auto cofm  = heat.center();
     auto duration = std::chrono::high_resolution_clock::now() - start;
     std::cout << cofm.x << ", " << cofm.y << "\n";
-    std::cout << "time: " << std::chrono::duration_cast<std::chrono::microseconds>(duration).count() << " us\n";
+    std::cout << "time: " << std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() << " ns\n";
+
+    constexpr std::size_t CHANNELS = 3;
+    std::uint8_t* heatmap = new std::uint8_t[ROWS * COLS * CHANNELS];
+    //std::size_t image_index = 0;
+    for (std::size_t i = 0; i < ROWS; i++) {
+        for (std::size_t j = 0; j < COLS; j++) {
+            auto image_index = i * ROWS * CHANNELS + j * CHANNELS;
+            auto index = i * ROWS + j;
+            auto gray = static_cast<std::uint8_t>(std::round(heat.data()[index] * 255.0));
+
+            heatmap[image_index + 0] = gray;
+            heatmap[image_index + 1] = gray;
+            heatmap[image_index + 2] = gray;
+        }
+    }
+
+    stbi_write_png("heatmap.png", ROWS, COLS, CHANNELS, heatmap, COLS * CHANNELS);
+
+    delete [] heatmap;
 
     return 0;
 }
