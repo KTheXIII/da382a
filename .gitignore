@@ -5,6 +5,9 @@
 # NetLogo
 *.tmp.nlogo
 
+# IntelliJ
+.idea
+
 # Xcode
 *.xcworkspace
 *.xcodeproj
