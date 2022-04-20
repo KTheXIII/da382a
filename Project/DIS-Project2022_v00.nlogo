@@ -62,10 +62,10 @@ voters-own [
   age
   familyList
   friendsList
-  levelOfEducation
+  levelOfEducation ;Kan variera från 1-3 dvs PrG-G-PoG
   flagEmployed
   wage
-  region
+  region ;Nödvändig för att veta vilken region en agent tillhör
   ]
 ; *********************end agent-specific variables *************
 
@@ -90,10 +90,10 @@ to setup
             ; create the agents in the different regions
             ; createvoters-region
             setup-voters ;initial creation for right now
-            ; set the age of the agents
-            setup-educationLevel ; set the educational level of the agents
+            setup-agentAge; set the age of the agents                                        ----DONE----
+            setup-educationLevel ; set the educational level of the agents                   ----DONE----
             ; set the status of employed or unemployed of the agents
-            ; set the monthly wage of the employed agents
+            setup-monthlyWage ; set the monthly wage of the employed agents                  ----DONE----
             ; set the political attitudes of the agents
         ;-end setup of agents
   ; --- end create and setup voters
@@ -150,6 +150,7 @@ to go
     proactive-behavior ; finite state machine for the proactive behavior
   ]
 
+
   ;----- End Agents to-go part ----------------------------------------
   ;
   tick
@@ -166,12 +167,120 @@ to setup-voters
     set shape "person" set size 2
     set intentions []
     set beliefs []
-    add-belief create-belief "age" random 80
+
+    ;Detta har vi använt för att testa enbart
     ask voters[
-      set region random 3
-      set levelOfEducation 0
+      set region 1 + random 3 ; 1, 2, 3
     ]
   ]
+end
+
+to show_messages
+
+end
+
+to setup-agentAge
+  let numOfAgentsInReg1 0
+  let numOfAgentsInReg2 0
+  let numOfAgentsInReg3 0
+
+  ask voters [
+    (ifelse region = 1 [set numOfAgentsInReg1 numOfAgentsInReg1 + 1]
+      region = 2 [set numOfAgentsInReg2 numOfAgentsInReg2 + 1]
+      region = 3 [set numOfAgentsInReg3 numOfAgentsInReg3 + 1]
+    )
+  ]
+
+  ;Region 1
+  ;Age group 1 - 0 - 19 år 25%
+  ;Age group 2 - 20 - 49 år 34%
+  ;Age group 3 - 50 - 69 år 24%
+  ;Age group 4 - 70+ 17%
+  let numOfAgeGroup1Reg1 numOfAgentsInReg1 * 0.25
+  let numOfAgeGroup2Reg1 numOfAgentsInReg1 * 0.34
+  let numOfAgeGroup3Reg1 numOfAgentsInReg1 * 0.24
+  let numOfAgeGroup4Reg1 numOfAgentsInReg1 * 0.17
+
+  ;Region 2
+  ;Age group 1 - 0 - 19 år 21%
+  ;Age group 2 - 20 - 49 år 33%
+  ;Age group 3 - 50 - 69 år 26%
+  ;Age group 4 - 70+ 20%
+  let numOfAgeGroup1Reg2 numOfAgentsInReg2 * 0.21
+  let numOfAgeGroup2Reg2 numOfAgentsInReg2 * 0.33
+  let numOfAgeGroup3Reg2 numOfAgentsInReg2 * 0.26
+  let numOfAgeGroup4Reg2 numOfAgentsInReg2 * 0.2
+
+  ;Region 3
+  ;Age group 1 - 0 - 19 år 20%
+  ;Age group 2 - 20 - 49 år 46%
+  ;Age group 3 - 50 - 69 år 20%
+  ;Age group 4 - 70+ 14%
+  let numOfAgeGroup1Reg3 numOfAgentsInReg3 * 0.2
+  let numOfAgeGroup2Reg3 numOfAgentsInReg3 * 0.46
+  let numOfAgeGroup3Reg3 numOfAgentsInReg3 * 0.2
+  let numOfAgeGroup4Reg3 numOfAgentsInReg3 * 0.14
+
+  ;Region 1
+  ask voters with [region = 1] [
+    (ifelse numOfAgeGroup1Reg1 > 0 [
+      set age random 20
+      set numOfAgeGroup1Reg1 numOfAgeGroup1Reg1 - 1
+      ]
+      numOfAgeGroup2Reg1 > 0 [
+        set age 20 + random 30 ;20 + random mellan 0-29 dvs 20 - 49 eftersom vi lägger på 20 i början
+        set numOfAgeGroup2Reg1 numOfAgeGroup2Reg1 - 1
+      ]
+      numOfAgeGroup3Reg1 > 0 [
+        set age 50 + random 20 ;50 + random mellan 0 - 19 dvs 50 - 69
+        set numOfAgeGroup3Reg1 numOfAgeGroup3Reg1 - 1
+      ]
+      numOfAgeGroup4Reg1 > 0 [
+        set age 70 + random 31 ;70 + random mellan 0 - 29 dvs 70 - 100 OSÄKERT var övre gräns går
+        set numOfAgeGroup4Reg1 numOfAgeGroup4Reg1 - 1
+      ])
+  ]
+
+  ;Region 2
+  ask voters with [region = 2] [
+    (ifelse numOfAgeGroup1Reg2 > 0 [
+      set age random 20
+      set numOfAgeGroup1Reg2 numOfAgeGroup1Reg2 - 1
+      ]
+      numOfAgeGroup2Reg2 > 0 [
+        set age 20 + random 30 ;20 + random mellan 0-29 dvs 20 - 49 eftersom vi lägger på 20 i början
+        set numOfAgeGroup2Reg2 numOfAgeGroup2Reg2 - 1
+      ]
+      numOfAgeGroup3Reg2 > 0 [
+        set age 50 + random 20 ;50 + random mellan 0 - 19 dvs 50 - 69
+        set numOfAgeGroup3Reg2 numOfAgeGroup3Reg2 - 1
+      ]
+      numOfAgeGroup4Reg2 > 0 [
+        set age 70 + random 31 ;70 + random mellan 0 - 29 dvs 70 - 100 OSÄKERT var övre gräns går
+        set numOfAgeGroup4Reg2 numOfAgeGroup4Reg2 - 1
+      ])
+  ]
+
+  ;Region 3
+  ask voters with [region = 3] [
+    (ifelse numOfAgeGroup1Reg3 > 0 [
+      set age random 20
+      set numOfAgeGroup1Reg3 numOfAgeGroup1Reg3 - 1
+      ]
+      numOfAgeGroup2Reg3 > 0 [
+        set age 20 + random 30 ;20 + random mellan 0-29 dvs 20 - 49 eftersom vi lägger på 20 i början
+        set numOfAgeGroup2Reg3 numOfAgeGroup2Reg3 - 1
+      ]
+      numOfAgeGroup3Reg2 > 0 [
+        set age 50 + random 20 ;50 + random mellan 0 - 19 dvs 50 - 69
+        set numOfAgeGroup3Reg3 numOfAgeGroup3Reg3 - 1
+      ]
+      numOfAgeGroup4Reg2 > 0 [
+        set age 70 + random 31 ;70 + random mellan 0 - 29 dvs 70 - 100 OSÄKERT var övre gräns går
+        set numOfAgeGroup4Reg3 numOfAgeGroup4Reg3 - 1
+      ])
+  ]
+
 end
 
 to setup-educationLevel
@@ -180,14 +289,10 @@ to setup-educationLevel
   let numOfAgentsInReg2 0
   let numOfAgentsInReg3 0
 
-  let Reg1 0
-  let Reg2 0
-  let Reg3 0
-
   ask voters [
-    (ifelse region = 0 [set numOfAgentsInReg1 numOfAgentsInReg1 + 1]
-      region = 1 [set numOfAgentsInReg2 numOfAgentsInReg2 + 1]
-      region = 2 [set numOfAgentsInReg3 numOfAgentsInReg3 + 1]
+    (ifelse region = 1 [set numOfAgentsInReg1 numOfAgentsInReg1 + 1]
+      region = 2 [set numOfAgentsInReg2 numOfAgentsInReg2 + 1]
+      region = 3 [set numOfAgentsInReg3 numOfAgentsInReg3 + 1]
     )
   ]
 
@@ -195,87 +300,109 @@ to setup-educationLevel
   let numOfPrG1 numOfAgentsInReg1 * 0.2
   let numOfG1 numOfAgentsInReg1 * 0.52
   let numOfPoG1 numOfAgentsInReg1 * 0.24
-  set numOfPrG1 floor numOfPrG1
-  set numOfG1 floor numOfG1
-  set numOfPoG1 floor numOfPoG1
 
   ;Region 2 numOfAgentsInRegion * education %
   let numOfPrG2 numOfAgentsInReg2 * 0.14
   let numOfG2 numOfAgentsInReg2 * 0.56
   let numOfPoG2 numOfAgentsInReg2 * 0.27
-  set numOfPrG2 floor numOfPrG2
-  set numOfG2 floor numOfG2
-  set numOfPoG2 floor numOfPoG2
 
   ;Region 3 numOfAgentsInRegion * education %
   let numOfPrg3 numOfAgentsInReg3 * 0.05
   let numOfG3 numOfAgentsInReg3 * 0.22
   let numOfPoG3 numOfAgentsInReg3 * 0.7
-  set numOfPrG3 floor numOfPrG3
-  set numOfG3 floor numOfG3
-  set numOfPoG3 floor numOfPoG3
 
 
-  ; Region 1 PrG = 1, G = 2, PoG = 3
-  ask voters with [region = 0 and levelOfEducation = 0] [
-    if numOfPrg1 > 0[
-      set levelOfEducation 1
-      set numOfPrG1 numOfPrG1 - 1
-      set Reg1 Reg1 + 1
-    ]
-    if numOfG1 > 0[
-      set levelOfEducation 2
-      set numOfG1 numOfG1 - 1
-    ]
-    if numOfPog1 > 0[
+  ; Region 1: PrG = 1, G = 2, PoG = 3
+  ask voters with [region = 1] [
+    (ifelse numOfPog1 > 0 and age > 19 [
       set levelOfEducation 3
       set numOfPoG1 numOfPoG1 - 1
     ]
+      numOfPrg1 > 0[
+      set levelOfEducation 1
+      set numOfPrG1 numOfPrG1 - 1
+    ]
+      numOfG1 > 0[
+      set levelOfEducation 2
+      set numOfG1 numOfG1 - 1
+    ])
   ]
 
-  ; Region 2 PrG = 1, G = 2, PoG = 3
-  ask voters with [region = 1 and levelOfEducation = 0] [
-    if numOfPrg2 > 0[
-      set levelOfEducation 1
-      set numOfPrG2 numOfPrG2 - 1
-      set Reg2 Reg2 + 1
-    ]
-    if numOfG1 > 0[
-      set levelOfEducation 2
-      set numOfG2 numOfG2 - 1
-    ]
-    if numOfPog1 > 0[
+  ; Region 2: PrG = 1, G = 2, PoG = 3
+  ask voters with [region = 2] [
+    (ifelse numOfPog2 > 0  and age > 19 [
       set levelOfEducation 3
       set numOfPoG2 numOfPoG2 - 1
     ]
+      numOfPrg2 > 0[
+      set levelOfEducation 1
+      set numOfPrG2 numOfPrG2 - 1
+    ]
+      numOfG2 > 0[
+      set levelOfEducation 2
+      set numOfG2 numOfG2 - 1
+    ])
   ]
 
-  ; Region 3 PrG = 1, G = 2, PoG = 3
-  ask voters with [region = 2 and levelOfEducation = 0] [
-    if numOfPrg3 > 0[
-      set levelOfEducation 1
-      set numOfPrG3 numOfPrG3 - 1
-      set Reg3 Reg3 + 1
-    ]
-    if numOfG1 > 0[
-      set levelOfEducation 2
-      set numOfG3 numOfG3 - 1
-    ]
-    if numOfPog1 > 0[
+  ; Region 3: PrG = 1, G = 2, PoG = 3
+  ask voters with [region = 3] [
+    (ifelse numOfPog3 > 0  and age > 19 [
       set levelOfEducation 3
       set numOfPoG3 numOfPoG3 - 1
     ]
+      numOfPrg3 > 0[
+      set levelOfEducation 1
+      set numOfPrG3 numOfPrG3 - 1
+    ]
+      numOfG3 > 0[
+      set levelOfEducation 2
+      set numOfG3 numOfG3 - 1
+    ])
+  ]
+end
+
+to setup-monthlyWage
+  ;Region 1
+  ask voters with [region = 1] [
+    (ifelse age >= 16 and age <= 19 [
+      set wage 18000
+    ]
+      age >= 20 and age <= 64 [
+      set wage 20000
+    ]
+      age >= 65 [
+      set wage 17000
+    ])
   ]
 
-  ;Testningar
-  show numOfAgentsInReg1
-  show numOfAgentsInReg2
-  show numOfAgentsInReg3
-  show Reg1
-  show Reg2
-  show Reg3
+  ;Region 2
+  ask voters with [region = 2] [
+    (ifelse age >= 16 and age <= 19 [
+      set wage 20000
+    ]
+      age >= 20 and age <= 64 [
+      set wage 21000
+    ]
+      age >= 65 [
+      set wage 19000
+    ])
+  ]
+
+  ;Region 3
+  ask voters with [region = 3] [
+    (ifelse age >= 16 and age <= 19 [
+      set wage 23000
+    ]
+      age >= 20 and age <= 64 [
+      set wage 24000
+    ]
+      age >= 65 [
+      set wage 25000
+    ])
+  ]
 
 end
+
 
 to process-messages
 ; reads and interprets all the messages on the message-queue (might need a while-loop)
