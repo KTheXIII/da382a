@@ -392,11 +392,11 @@ PLOT
 35
 1807
 185
-Histogram level of education in region 1
+Level of education in region 1
 level of education
 voters
 1.0
-3.0
+4.0
 0.0
 10.0
 true
@@ -413,13 +413,13 @@ PLOT
 Level of education region 2
 level of education
 voters
+1.0
+4.0
 0.0
-3.0
-0.0
-30.0
+10.0
 true
 false
-"set-plot-x-range 1 3\nset-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 3" ""
+";set-plot-x-range 1 3\n;set-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 3" ""
 PENS
 "default" 1.0 1 -10899396 true "histogram [levelofeducation] of voters with [region = 2]" "histogram [levelofeducation] of voters with [region = 2]"
 
@@ -432,7 +432,7 @@ Level of education region 3
 level of education
 voters
 1.0
-3.0
+4.0
 0.0
 10.0
 true
