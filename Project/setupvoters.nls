@@ -283,23 +283,26 @@ to setup-monthlyWage
 end
 
 to setup-familyList
-
   
   ask voters [
     let myId who
     let fmList []
     let numOfFamilyMembers 3 + random 5
+    let radius 0
     
-    ask voters in-radius 15 [
-      if numOfFamilyMembers > 0 [
-        if myId != who [
-          set fmList lput who fmList
-          set numOfFamilyMembers numOfFamilyMembers - 1
-        ]
+    while [(NumOfFamilyMembers > 0)] [
+      ask voters in-radius radius [
+        if numOfFamilyMembers > 0 [
+          if myId != who and member? who fmList != true [
+              set fmList lput who fmList
+              set numOfFamilyMembers numOfFamilyMembers - 1
+          ]
+        ] 
       ]
-     set familyList fmList  
-    ] 
-  ]
+      set radius radius + 1
+   ]
+    set familyList fmList
+  ] 
   
 end
 
