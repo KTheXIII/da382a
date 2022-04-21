@@ -108,7 +108,6 @@ to setup
 
   ; Create the regions
 
-
   ; Create and setup voters (functions included in 'setupvoters.nls'
         ; set the regions of the agents
         setup-regions
@@ -448,6 +447,17 @@ SWITCH
 506
 show_messages
 show_messages
+0
+1
+-1000
+
+SWITCH
+43
+137
+146
+170
+tttt
+tttt
 0
 1
 -1000

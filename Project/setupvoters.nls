@@ -72,6 +72,8 @@ end
 to setup-voters
   ; Create all of the voter agents first
   create-voters num-agents [
+    set label who
+    set label-color black
     set region 0
     ;set shape "circle" ; alternative 1
     set shape "person" ; alternative 2
@@ -96,6 +98,7 @@ to setup-voters
   setup-agentAge
   setup-educationLevel
   setup-monthlyWage
+  setup-familyList
 end
 
 
@@ -277,5 +280,26 @@ to setup-monthlyWage
       set wage 25000
     ])
   ]
+end
+
+to setup-familyList
+
+  
+  ask voters [
+    let myId who
+    let fmList []
+    let numOfFamilyMembers 3 + random 5
+    
+    ask voters in-radius 15 [
+      if numOfFamilyMembers > 0 [
+        if myId != who [
+          set fmList lput who fmList
+          set numOfFamilyMembers numOfFamilyMembers - 1
+        ]
+      ]
+     set familyList fmList  
+    ] 
+  ]
+  
 end
 
