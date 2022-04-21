@@ -9,18 +9,21 @@
 ;            can be later sum if it pass the neighbour check procudure which uses Manhattan distancing.
 ;
 ;            Authors: Pratchaya Khansomboon (PK), Eric Lundin (EL), Marcus Linné (ML), Linnéa Mörk (LM)
+; 2022-04-14 Branch of "Chapter 5," week 15, TASK 5 with implementing the state machine and proactive parts.
+; 2022-04-14 Parts of the code are moved to proactive.nls and the rest is in perceive-environment.
+; Mouad, Reem, Petter
 ; 2022-04-15 Fix center of mass calculation, PK
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
-  "bdi.nls"
-  "regions.nls"
-  ;"communication.nls"
-  ;"setupvoters.nls"
-  ;"proactive.nls"
+    "bdi.nls"
+    "regions.nls"
+    ;"communication.nls"
+    ;"setupvoters.nls"
+    "proactive.nls"
+  ;
+  ;
 ]
-; ********************end included files ********
-
 ; ************ EXTENSIONS *****************
 extensions [
   ; vid ; used for recording of the simulation
@@ -70,6 +73,7 @@ voters-own [
   levelOfEducation
   flagEmployed
   wage
+  old_wage
 ]
 ; *********************end agent-specific variables *************
 
@@ -177,6 +181,11 @@ to setup-voters
     set intentions []
     set beliefs []
     add-belief create-belief "age" random 80
+
+    ; Initial status and state
+    set current_status "adult"
+    set flagEmployed false
+    setup-proactive
   ]
 end
 
@@ -289,13 +298,29 @@ to process-messages
   add-belief create-belief "incoming-conviction" conviction_queue
   add-intention "react-heatmap" "heatmap-eval"
 end
+to perceive-environment
+  ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
 
-to perceive-environment ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
+  ; Update current_status in your code.
+  ; set flagEmployed true ; update this to true or false in your code.
 end
 
 to proactive-behavior   ; move this part into an own file "proactive.nls" and include it under includes
-end
+  ; if changed status, set new initial state
+  ; call proactive-behavior
+  run current_state
+  if flagNewYear [
+    ;print "New Year!"
 
+    ; Increase job wage, if status is adult and not employed.
+    if flagEmployed [
+    set old_wage wage
+    let yearly_increase random-float 0.08
+    set yearly_increase yearly_increase + 1
+    set wage wage * yearly_increase
+    ]
+  ]
+end
 ;************** end function and report part **************
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -319,8 +344,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -395,6 +420,23 @@ tickNum
 1
 0
 Number
+
+BUTTON
+112
+120
+175
+153
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
