@@ -5,30 +5,35 @@
 ; 2022-04-07 Initial Template by Gion K Svedberg (gks)
 ; 2022-04-07 people and time: Nour Ismail, Drilon Sadiku, Nezar Sheikhi, Gabriella Pantic, Alban Islami
 ; 2022-04-13 Begin of first integration version 00 towards a common template, gks
-; 2022-04-14 Implements attitude position and conviction value calculation. New conviction value
+; 2022-04-14 "polattitude.nls" - political attitude position and conviction value calculation. New conviction value
 ;            can be later sum if it pass the neighbour check procudure which uses Manhattan distancing.
-;
 ;            Authors: Pratchaya Khansomboon (PK), Eric Lundin (EL), Marcus Linné (ML), Linnéa Mörk (LM)
 ; 2022-04-14 Branch of "Chapter 5," week 15, TASK 5 with implementing the state machine and proactive parts.
-; 2022-04-14 Parts of the code are moved to proactive.nls and the rest is in perceive-environment.
-; Mouad, Reem, Petter
+;            Parts of the code are moved to proactive.nls and the rest is in perceive-environment.
+;            Authors: Mouad, Reem, Petter
 ; 2022-04-15 Fix center of mass calculation, PK
+; 2022-04-20 Integrated regions and their setup. Authors: Gabriella, Nour, Drilon, Nezar, Alban
+; 2022-04-20 Integrated setup of voters age, education level. Authors: Ademir, Isac, Rasmus, Christian H., Johan
+; 2022-04-20 Combined the code for the setup of voters and the creation of regions into the include file 'setupvoters.nls'. (gks)
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
     "bdi.nls"
-    "regions.nls"
-    ;"communication.nls"
-    ;"setupvoters.nls"
+    "communication.nls"
+    "setupvoters.nls"
     "proactive.nls"
+    "polattitude.nls"
   ;
   ;
+
 ]
+; ********************end included files ********
+
 ; ************ EXTENSIONS *****************
 extensions [
-  ; vid ; used for recording of the simulation
-  array
-  table
+; vid ; used for recording of the simulation
+array
+table
 ]
 ; ********************end extensions ********
 
@@ -36,7 +41,7 @@ extensions [
 ; ************ BREEDS OF TURTLES *****************
 breed [voters voter]  ;
 
-; ******************** end breed of turtles ********
+; ********************end breed of turtles ********
 
 
 ; ************* GLOBAL VARIABLES *****************
@@ -48,9 +53,15 @@ globals [
   day week month year
   old_day old_week old_month old_year
 
-  ; attitude plane matrix width and height
+  ; for the global definition of attitude plane matrix width and height
   attitude_rows
   attitude_cols
+
+  ; for the numbers of agents in the different regions
+  numAgentRegion1
+  numAgentRegion2
+  numAgentRegion3
+
 ]
 
 ; ******************end global variables ***********
@@ -70,13 +81,17 @@ voters-own [
   age
   familyList
   friendsList
-  levelOfEducation
+  levelOfEducation ; 1 == PrG, 2== G, 3 == PoG
   flagEmployed
-  wage
-  old_wage
-]
+  wage old_wage
+  region
+  current_pol_attitude ; holds x and y values of attitude plane
+  ]
 ; *********************end agent-specific variables *************
 
+; ************* PATCH-SPECIFIC VARIABLES *********
+patches-own [meaning]
+; *********************end patches-specific variables *************
 
 ; ******************* SETUP PART *****************
 ;
@@ -94,26 +109,18 @@ to setup
   ; Create the regions
 
 
-  ; Create and setup voters (functions could be included with own file 'setupvoters.nls'
+  ; Create and setup voters (functions included in 'setupvoters.nls'
         ; set the regions of the agents
         setup-regions
-        ; setup of agents
-            ; create the agents in the different regions
-            ; createvoters-region
-            setup-voters ; initial creation for right now
-            ; set the age of the agents
-            ; set the educational level of the agents
-            ; set the status of employed or unemployed of the agents
-            ; set the monthly wage of the employed agents
-            setup-heatmap ; set the political attitudes of the agents
-        ;-end setup of agents
+        ; creation and setup of agents
+        setup-voters
   ; --- end create and setup voters
+
+
+
   ;
-;  ask one-of voters [
-;    let our-heatmap beliefs-of-type "attitude-plane"
-;    output-print our-heatmap
-;  ]
   reset-ticks
+  setup-plots
 end
 
 ; **************************end setup part *******
@@ -143,6 +150,7 @@ to go
 
   ; Sending political messages to random selection of agents
 
+
   ; Changing the status of some random unemployed adults to employed
 
   ; Changing the status of some random employed adults to employed
@@ -153,8 +161,8 @@ to go
   ; Cyclic execution of what the agents are supposed to do
   ; Trying to implement a Hybrid-Agent architecture with a ractive part running the intentions on
   ; the intention stack and the proactive part with a deliberation of status, states and goals
-  ;
-  ; Ask agents to do something.
+;
+ ; Ask agents to do something.
   ask voters [
     process-messages ; process messages in the message-queue.
     perceive-environment ; updates beliefs about the environment
@@ -164,129 +172,24 @@ to go
     proactive-behavior ; finite state machine for the proactive behavior
   ]
 
-  ; ----- End Agents to-go part ----------------------------------------
+  ;----- End Agents to-go part ----------------------------------------
   ;
   tick
 
   ; show/hide things
 end
-; ************** end to go/starting part ***************
+;************************end to go/starting part ***********
 
 
 ; ************** FUNCTION and REPORT PART **************
-to setup-voters
-  create-voters num-agents [
-    setxy random-xcor random-ycor
-    set shape "person" set size 2
-    set intentions []
-    set beliefs []
-    add-belief create-belief "age" random 80
 
-    ; Initial status and state
-    set current_status "adult"
-    set flagEmployed false
-    setup-proactive
-  ]
-end
-
-; Generate the attitude plane heatmap and set it in the beliefs hashmap.
-to setup-heatmap
-  ask voters [
-    let rows attitude_rows
-    let cols attitude_cols
-    let max_heat 10
-
-    let heatmap array:from-list n-values (cols * rows) [0]
-;    array:set heatmap random int (rows * cols) random int max_heat
-    add-belief create-belief "attitude-plane" heatmap
-  ]
-end
-
-; Get the attitude plane current coordinate and the calculated
-; conviction based on the attitude plane's heatmap.
-;
-; return [x y z] where (x, y) is the position and the z is the conviction value.
-to-report center-of-mass [heatmap]
-  let rows attitude_rows
-  let cols attitude_cols
-
-  let sum_mass 0
-  let sum_particles list 0 0
-  foreach (n-values rows [i -> i]) [
-    y -> foreach (n-values cols [j -> j]) [
-      x ->
-      let index y * rows + x
-      let m array:item heatmap index
-
-      let mx m * x
-      let my m * y
-
-      let sx item 0 sum_particles
-      let sy item 1 sum_particles
-      set sum_particles list (mx + sx) (my + sy)
-      set sum_mass (sum_mass + m)
-    ]
-  ]
-  if sum_mass = 0 [set sum_mass 1]
-  let x round (item 0 sum_particles / sum_mass)
-  let y round (item 1 sum_particles / sum_mass)
-  let z array:item heatmap (y * rows + x)
-  report (list x y z)
-end
-
-; Sum the heat (x, y, z) conviction on our heatmap.
-; This applies to the current agent.
-to sum-heatmap [heat]
-  let row attitude_rows
-  let heatmap beliefs-of-type "attitude-plane"
-  let hx item 0 heat  ; x
-  let hy item 1 heat  ; y
-  let hz item 2 heat  ; z
-
-  let index hy * row + hx
-  let current_z array:item heatmap index
-  array:set heatmap index (current_z + hz)
-end
-
-; Check if the incoming attitude message is within a range
-; of our current position in the attitude plane
-;
-; true:  message is valid for attitude-plane summation
-; false: message not satisfy the attitude-plane summation
-to-report neighbour-check [message heatmap]
-  let attitude_plane center-of-mass heatmap
-  let apx item 0 attitude_plane
-  let apy item 1 attitude_plane
-
-  let mx item 0 message
-  let my item 1 message
-
-;  ; Euclidean distance
-;  let dist_euclidean (apx - mx) * (apx - mx) + (apy - my) * (apy - my)
-;  report dist_euclidean <= 1
-
-  ; Manhattan distance
-  let dist_x abs(apx - mx)
-  let dist_y abs(apy - my)
-
-  report dist_x <= 1 xor dist_y <= 1
-end
-
-; This controls our reactive layer.
-to react-heatmap
-  let conviction_queue beliefs-of-type "incoming-conviction"
-end
-
-to-report heatmap-eval
-  let conviction_queue beliefs-of-type "incoming-conviction"
-  report true
-end
 
 to process-messages
-  ; reads and interprets all the messages on the message-queue (might need a while-loop)
+; reads and interprets all the messages on the message-queue (might need a while-loop)
   ; -> updates beliefs and variables
   ; -> adds intentions (=reactive procedures) onto the intention stack
 
+  ; political attitude plane part:
   ; Logic for adding incoming conviction value into the our current agent
   ; conviction queue for later processing. This is required because the
   ; intention stack cannot store data.
@@ -297,55 +200,64 @@ to process-messages
 
   add-belief create-belief "incoming-conviction" conviction_queue
   add-intention "react-heatmap" "heatmap-eval"
+  ;--end political attitude plane part.
+
 end
+
 to perceive-environment
   ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
 
   ; Update current_status in your code.
   ; set flagEmployed true ; update this to true or false in your code.
-end
 
-to proactive-behavior   ; move this part into an own file "proactive.nls" and include it under includes
-  ; if changed status, set new initial state
+
+  ; if changed status, set new current state
   ; call proactive-behavior
-  run current_state
+
+
+
+  ; proactive behavior testing part:
   if flagNewYear [
-    ;print "New Year!"
+    print "New Year!"
 
     ; Increase job wage, if status is adult and not employed.
     if flagEmployed [
-    set old_wage wage
-    let yearly_increase random-float 0.08
-    set yearly_increase yearly_increase + 1
-    set wage wage * yearly_increase
+      set old_wage wage
+      let yearly_increase random-float 0.08
+      set yearly_increase yearly_increase + 1
+      set wage wage * yearly_increase
     ]
   ]
+  ;--end proactive behavior testing part ---
 end
+
+
+
 ;************** end function and report part **************
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-647
-448
+1324
+580
 -1
 -1
-13.0
+16.52
 1
 10
 1
 1
 1
 0
+0
+0
 1
-1
-1
--16
-16
--16
-16
-1
-1
+0
+66
+0
+33
+0
+0
 1
 ticks
 30.0
@@ -370,7 +282,7 @@ num-agents
 num-agents
 5
 100
-45.0
+100.0
 1
 1
 NIL
@@ -421,22 +333,124 @@ tickNum
 0
 Number
 
-BUTTON
-112
-120
-175
-153
+PLOT
+1343
+36
+1543
+186
+Histogram of age in region 1
+age
+voters
+0.0
+100.0
+0.0
+100.0
+false
+false
+"set-plot-x-range 0 100\nset-plot-y-range 0 count (voters with [region = 1])\nset-histogram-num-bars 5" ""
+PENS
+"voters" 1.0 1 -955883 true "" "histogram [age] of voters with [region = 1]"
+
+PLOT
+1345
+229
+1545
+379
+Histogram of age in region 2
+age
+voters
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 100\nset-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 5" ""
+PENS
+"default" 1.0 1 -8330359 true "" "histogram [age] of voters with [region = 2]"
+
+PLOT
+1350
+415
+1550
+565
+Histogram of age in region 3
 NIL
-go
-T
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 100\nset-plot-y-range 0 count (voters with [region = 3])\nset-histogram-num-bars 5" ""
+PENS
+"default" 1.0 1 -14070903 true "" "histogram [age] of voters with [region = 3]"
+
+PLOT
+1607
+35
+1807
+185
+Histogram level of education in region 1
+level of education
+voters
+1.0
+3.0
+0.0
+10.0
+true
+false
+";set-plot-x-range 1 3\n;set-plot-y-range 0 count (voters with [region = 1])\nset-histogram-num-bars 3" ""
+PENS
+"default" 1.0 1 -2674135 true "histogram [levelOfEducation] of voters with [region = 1]" "histogram [levelofeducation] of voters with [region = 1]"
+
+PLOT
+1606
+238
+1806
+388
+Level of education region 2
+level of education
+voters
+0.0
+3.0
+0.0
+30.0
+true
+false
+"set-plot-x-range 1 3\nset-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 3" ""
+PENS
+"default" 1.0 1 -10899396 true "histogram [levelofeducation] of voters with [region = 2]" "histogram [levelofeducation] of voters with [region = 2]"
+
+PLOT
+1606
+413
+1806
+563
+Level of education region 3
+level of education
+voters
+1.0
+3.0
+0.0
+10.0
+true
+false
+";set-plot-x-range 1 3\n;set-plot-y-range 0 count voters with [region = 3]\nset-histogram-num-bars 3" ""
+PENS
+"default" 1.0 1 -13345367 true "histogram [levelOfEducation] of voters with [region = 3]" "histogram [levelOfEducation] of voters with [region = 3]"
+
+SWITCH
+10
+473
+156
+506
+show_messages
+show_messages
+0
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?

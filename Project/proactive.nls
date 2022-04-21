@@ -1,8 +1,17 @@
+; File with functionality of the proactive behavior of the voter agents
+
+; FILE HISTORY:
+
 ; 2022-04-14 Branch of "Chapter 5," week 15, TASK 5 with implementing the state machine and proactive parts. (Mouad, Reem, Petter)
 ; 2022-04-14 This code is included in the project.
+;
+;---------------------------------------------------
+
+
+
 
 ; Sets in ini
-to setup-proactive
+to setup-initialState
   (ifelse
     current_status = "child" [
       set current_state [ -> schooling]
@@ -20,6 +29,13 @@ to setup-proactive
         print "Error no status"
     ])
 end
+
+
+to proactive-behavior ; 
+  run current_state
+end
+
+; Definition of the states
 
 ; -- Children  --
 to schooling

@@ -1,0 +1,240 @@
+; File with functionality regarding the setup of regions and voters
+
+; FILE HISTORY:
+
+; 2022-04-20 Integrated regions and their setup. Authors: Gabriella, Nour, Drilon, Nezar, Alban
+; 2022-04-20 Integrated setup of voters age, education level. Authors: Ademir, Isac, Rasmus, Christian H., Johan
+;
+;
+;---------------------------------------------------
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SETUP OF THE MODEL AND OF THE REGIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Model Settings under 'Interface'->'Settings...'
+; World
+; location of origin: Corner
+; Bottom Left
+; min-pxcor: 0 (minimum x coordinate for patches)
+; max-pxcor: 66 (maximum x coordinate for patches)
+; min-pycor: 0 (minimum y coordinate for patches)
+; max-pycor: 33 (maximum y coordinate for patches)
+; X world wraps horizontally
+; X world wraps vertically
+; View
+; Patch size: 16.52
+; Font size: 10
+; Frame rate: 30
+;
+; X show tick counter
+; Tick counter label: ticks
+
+
+to setup-regions
+  ;Region1
+  ask patches with [pxcor >= 0 and pxcor <= 66 and pycor >= 22 and pycor <= 33]
+  [set pcolor orange
+   set meaning "region 3" ]
+  ask patch 4 31 [set plabel "Region3"]
+  ;Region2
+  ask patches with [pxcor >= 0 and pxcor <= 66 and pycor >= 11 and pycor <= 21]
+  [set pcolor green
+   set meaning "region 2" ]
+  ask patch 4 20 [set plabel "Region2"]
+  ;upperclass
+  ask patches with [pxcor >= 0 and pxcor <= 66 and pycor >= 0 and pycor <= 10]
+  [set pcolor blue
+   set meaning "region 1" ]
+  ask patch 4 9 [set plabel "Region1"]
+end
+
+
+;--- End setup of the model and of the regions ---------------------------
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SETUP OF THE VOTER AGENTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Creating the voter agents
+; create the agents in the different regions
+            ; createvoters-region
+            ;setup-voters ;initial creation for right now
+            ; set the age of the agents
+            ; set the educational level of the agents
+            ; set the status of employed or unemployed of the agents
+            ; set the monthly wage of the employed agents
+            ; set the political attitudes of the agents
+        ;-end setup of agents
+
+to setup-voters
+  ; Create all of the voter agents first
+  create-voters num-agents [
+    set region 0
+    ;set shape "circle" ; alternative 1
+    set shape "person" ; alternative 2
+    set size 1
+    set color white
+    set intentions []
+    set beliefs []
+    set incoming-queue []
+    set age -1 ; used to simplify setup-agentAge
+    set levelOfEducation -1 ; used to simplify setup-educationLevel
+    
+    ;temporary test-code for proactive behavior
+    ; Initial status and state
+    set current_status "adult"
+    set flagEmployed false
+    setup-initialState
+    ;--end temporary test-code
+   ] ; end create voter-agents
+  
+  ; populate the regions with voters
+  populateRegions
+  setup-agentAge
+  setup-educationLevel
+
+end
+
+
+
+
+;--- End setup of the voter agents---------------------------
+
+; Functions for the setup parts
+  
+to populateRegions  
+  
+  ; calculating the numbers of agents in each region, saving them into global variables
+  set numAgentRegion1 floor( num-agents * ( 0.49 ))
+  set numAgentRegion2 floor( num-agents * ( 0.11 ))
+  set numAgentRegion3 floor( num-agents * ( 0.40 ))
+  
+  ; populate region 1 with 49%
+    ;example for subsets used: ask turtles with [color != red] [set color blue]
+  ;let i 1 ; debug only
+  ask n-of numAgentRegion1 voters with [region = 0][setxy 0 + (random(66)) 22 + (random(11))
+                                                                       set region 1 
+                                                                       ;print word "region 1 -" i ; debug only
+                                                                       ;set i i + 1 ; debug only
+                                                                       ]
+  ; populate region 2 with 11%
+  ;set i 1 ; debug only
+  ask n-of numAgentRegion2 voters with [region = 0][setxy 0 + (random(66)) 11 + (random(11))
+                                                                       set region 2
+                                                                       ;print word "region 2 -" i ; debug only
+                                                                       ;set i i + 1 ; debug only
+                                                                      ]
+  ; populate region 3 with 40%
+  ;set i 1 ; debug only
+  ask n-of numAgentRegion3 voters with [region = 0][setxy 0 + (random(66)) 0  + (random(11))
+                                                                       set region 3
+                                                                       ;print word "region 3 -" i ; debug only
+                                                                       ;set i i + 1 ; debug only
+                                                                    ]
+  
+end
+
+to setup-agentAge
+  
+  ;Region 1
+  ;Age group 1 - 0 - 19 år 25%
+  ;Age group 2 - 20 - 49 år 34%
+  ;Age group 3 - 50 - 69 år 24%
+  ;Age group 4 - 70+ 17%
+  ask n-of round(numAgentRegion1 * (0.25)) voters with [(age = -1) and (region = 1)]
+                                                       [set age random(19)]
+  ask n-of round(numAgentRegion1 * (0.34)) voters with [(age = -1) and (region = 1)]
+                                                       [set age 20 + (random(29))]
+  ask n-of round(numAgentRegion1 * (0.24)) voters with [(age = -1) and (region = 1)]
+                                                       [set age 50 + (random(19))]
+  ask voters with [(age = -1) and (region = 1)]
+                  [set age 70 + (random(40))]; sets the rest to age group 4, prevents error if the sum is not 100%
+  
+  
+   ;Region 2
+  ;Age group 1 - 0 - 19 år 21%
+  ;Age group 2 - 20 - 49 år 33%
+  ;Age group 3 - 50 - 69 år 26%
+  ;Age group 4 - 70+ 20%  
+  ask n-of round(numAgentRegion2 * (0.21)) voters with [(age = -1) and (region = 2)]
+                                                       [set age random(19)]
+  ask n-of round(numAgentRegion2 * (0.33)) voters with [(age = -1) and (region = 2)]
+                                                       [set age 20 + (random(29))]
+  ask n-of round(numAgentRegion2 * (0.26)) voters with [(age = -1) and (region = 2)]
+                                                       [set age 50 + (random(19))]
+  ask voters with [(age = -1) and (region = 2)]
+                  [set age 70 + (random(40))]; sets the rest to age group 4, prevents error if the sum is not 100%
+  
+  ;Region 3
+  ;Age group 1 - 0 - 19 år 20%
+  ;Age group 2 - 20 - 49 år 46%
+  ;Age group 3 - 50 - 69 år 20%
+  ;Age group 4 - 70+ 14%  
+  ask n-of round(numAgentRegion3 * (0.20)) voters with [(age = -1) and (region = 3)]
+                                                       [set age random(19)]
+  ask n-of round(numAgentRegion3 * (0.46)) voters with [(age = -1) and (region = 3)]
+                                                       [set age 20 + (random(29))]
+  ask n-of round(numAgentRegion3 * (0.20)) voters with [(age = -1) and (region = 3)]
+                                                       [set age 50 + (random(19))]
+  ask voters with [(age = -1) and (region = 3)]
+                  [set age 70 + (random(40))]; sets the rest to age group 4, prevents error if the sum is not 100%
+  
+  
+  ; trying to verify the distribution for debugging
+  ;ask voters with [region = 1] [print word "region 1, age = " age]
+  ;ask voters with [region = 2] [print word "region 2, age = " age]
+  ;ask voters with [region = 3] [print word "region 3, age = " age]  
+end
+
+to setup-educationLevel
+  ;Region 1
+  ;PrG (=1) 20%
+  ;G (=2) 52%
+  ;PoG (=3) 24%
+  ask n-of round(numAgentRegion1 * (0.20)) voters with [(levelOfEducation = -1) and (region = 1)]
+                                                       [set levelOfEducation 1]
+  ask n-of round(numAgentRegion1 * (0.52)) voters with [(levelOfEducation = -1) and (region = 1)]
+                                                       [set levelOfEducation 2]
+  ask n-of round(numAgentRegion1 * (0.24)) voters with [(levelOfEducation = -1) and (region = 1)]
+                                                       [set levelOfEducation 3]
+ ;ask voters with [(levelOfEducation = -1) and (region = 1)]
+ ;                                                      [set levelOfEducation random(3)]
+  
+  
+   ;Region 2
+  ;PrG (=1) 14%
+  ;G (=2) 56%
+  ;PoG (=3) 27%
+  ask n-of round(numAgentRegion2 * (0.14)) voters with [(levelOfEducation = -1) and (region = 2)]
+                                                       [set levelOfEducation 1]
+  ask n-of round(numAgentRegion2 * (0.56)) voters with [(levelOfEducation = -1) and (region = 2)]
+                                                       [set levelOfEducation 2]
+  ask n-of round(numAgentRegion2 * (0.27)) voters with [(levelOfEducation = -1) and (region = 2)]
+                                                       [set levelOfEducation 3]
+ ;ask voters with [(levelOfEducation = -1) and (region = 2)]
+ ;                                                      [set levelOfEducation random(3)]
+  
+  ;Region 3
+   ;PrG (=1) 5%
+  ;G (=2) 22%
+  ;PoG (=3) 70%
+  ask n-of round(numAgentRegion3 * (0.05)) voters with [(levelOfEducation = -1) and (region = 3)]
+                                                       [set levelOfEducation 1]
+  ask n-of round(numAgentRegion3 * (0.22)) voters with [(levelOfEducation = -1) and (region = 3)]
+                                                       [set levelOfEducation 2]
+  ask n-of round(numAgentRegion3 * (0.70)) voters with [(levelOfEducation = -1) and (region = 3)]
+                                                       [set levelOfEducation 3]
+ ;ask voters with [(levelOfEducation = -1) and (region = 3)]
+ ;                                                      [set levelOfEducation random(3)]
+  
+  
+  ; trying to verify the distribution for debugging
+  ;ask voters with [region = 1] [print word "region 1, level of education = " levelOfEducation]
+  ;ask voters with [region = 2] [print word "region 2, level of education = " levelOfEducation]
+  ;ask voters with [region = 3] [print word "region 3, level of education = " levelOfEducation]
+  
+end
+
