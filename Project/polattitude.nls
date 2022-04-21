@@ -47,6 +47,8 @@ to setup-heatmap
 
     array:set heatmap (1 * cols + polIndex) 1
     add-belief create-belief "attitide-plane" heatmap
+    let com center-of-mass heatmap
+    set current_pol_attitude item 0 com
   ]
 end
 
@@ -58,8 +60,8 @@ to-report center-of-mass [heatmap]
   let rows attitude_rows
   let cols attitude_cols
 
-  let sum_mass 0
-  let sum_particles list 0 0
+  let sum_mass 0.0
+  let sum_particles list 0.0 0.0
   foreach (n-values rows [i -> i]) [
     y -> foreach (n-values cols [j -> j]) [
       x ->
@@ -75,9 +77,9 @@ to-report center-of-mass [heatmap]
       set sum_mass (sum_mass + m)
     ]
   ]
-  if sum_mass = 0 [set sum_mass 1]
-  let x round (item 0 sum_particles / sum_mass)
-  let y round (item 1 sum_particles / sum_mass)
+;  if sum_mass = 0 [set sum_mass 1]
+  let x floor (item 0 sum_particles / sum_mass)
+  let y floor (item 1 sum_particles / sum_mass)
   let z array:item heatmap (y * rows + x)
   report (list x y z)
 end
@@ -119,7 +121,6 @@ to-report neighbour-check [message heatmap]
 
   report dist_x <= 1 xor dist_y <= 1
 end
-
 
 ; This controls our reactive layer.
 to react-heatmap

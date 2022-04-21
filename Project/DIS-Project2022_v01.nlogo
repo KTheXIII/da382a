@@ -108,15 +108,12 @@ to setup
 
   ; Create the regions
 
-
   ; Create and setup voters (functions included in 'setupvoters.nls'
         ; set the regions of the agents
         setup-regions
         ; creation and setup of agents
         setup-voters
   ; --- end create and setup voters
-
-
 
   ;
   reset-ticks
@@ -149,7 +146,6 @@ to go
   set old_year year
 
   ; Sending political messages to random selection of agents
-
 
   ; Changing the status of some random unemployed adults to employed
 
@@ -453,22 +449,22 @@ show_messages
 -1000
 
 PLOT
-1487
-590
-1687
-740
+10
+118
+205
+286
 Political attitude
 sympathy
 voters
-1.0
-3.0
+0.0
+5.0
 0.0
 0.0
 true
 false
-"set-plot-x-range 1 5\nset-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 5\n" ""
+"set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5\n" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [levelofeducation] of voters with [region = 2]"
+"default" 1.0 1 -16777216 true "" "histogram [current_pol_attitude] of voters"
 
 @#$#@#$#@
 ## WHAT IS IT?
