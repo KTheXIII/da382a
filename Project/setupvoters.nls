@@ -95,7 +95,7 @@ to setup-voters
   populateRegions
   setup-agentAge
   setup-educationLevel
-
+  setup-monthlyWage
 end
 
 
@@ -236,5 +236,47 @@ to setup-educationLevel
   ;ask voters with [region = 2] [print word "region 2, level of education = " levelOfEducation]
   ;ask voters with [region = 3] [print word "region 3, level of education = " levelOfEducation]
   
+end
+
+to setup-monthlyWage
+  ;Region 1
+  ask voters with [region = 1] [
+    (ifelse age >= 16 and age <= 19 [
+      set wage 18000
+    ]
+      age >= 20 and age <= 64 [
+      set wage 20000
+    ]
+      age >= 65 [
+      set wage 17000
+    ])
+  ]
+
+  ;Region 2
+  ask voters with [region = 2] [
+    (ifelse age >= 16 and age <= 19 [
+      set wage 20000
+    ]
+      age >= 20 and age <= 64 [
+      set wage 21000
+    ]
+      age >= 65 [
+      set wage 19000
+    ])
+  ]
+
+  ;Region 3
+  ask voters with [region = 3] [
+    (ifelse age >= 16 and age <= 19 [
+      set wage 23000
+    ]
+      age >= 20 and age <= 64 [
+      set wage 24000
+    ]
+      age >= 65 [
+      set wage 25000
+    ])
+  ]
+
 end
 
