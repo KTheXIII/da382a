@@ -4,6 +4,7 @@
 
 ; 2022-04-20 Integrated regions and their setup. Authors: Gabriella, Nour, Drilon, Nezar, Alban
 ; 2022-04-20 Integrated setup of voters age, education level. Authors: Ademir, Isac, Rasmus, Christian H., Johan
+; 2022-04-21 Added setup-heatmap call in setup-voter function Authors: Eric Lundin, Pratchaya Khansomboon.
 ;
 ;
 ;---------------------------------------------------
