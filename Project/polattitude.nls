@@ -22,9 +22,32 @@ to setup-heatmap
     let cols attitude_cols
     let max_heat 10
 
-    let heatmap array:from-list n-values (cols * rows) [0]
+    
+    
+    let polLeft 12.6
+    let polSoc 39.5
+    let polMid 9.3
+    let polCons 22.1
+    let polRight 15.7
+    
+    ask voters [
+      let heatmap array:from-list n-values (cols * rows) [0]
+      let polVal  random(100)
+      let polIndex 0
+      
+      if polval < polLeft[set polIndex 0]
+      if (polSoc + polLeft) > polval and polval > polLeft[set polIndex 1]
+      if (polLeft + polSoc + polMid) > polval and polval > (polLeft + polSoc)[set polIndex 2]
+      if (polLeft + polSoc + polMid + polCons)> polVal and polval > (polLeft + polSoc + polMid)[set polIndex 3]
+      if (polLeft + polSoc + polMid + polCons + polRight) > polval and polval > (polLeft + polSoc + polMid + polCons)[set polIndex 4]
+      
+;
+      array:set heatmap 1 + polIndex 1
+      add-belief create-belief "attitide-plane" heatmap
+    ]
+    
 ;    array:set heatmap random int (rows * cols) random int max_heat
-    add-belief create-belief "attitude-plane" heatmap
+;    add-belief create-belief "attitude-plane" heatmap
   ]
 end
 

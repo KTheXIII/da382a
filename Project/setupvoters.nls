@@ -95,6 +95,7 @@ to setup-voters
   populateRegions
   setup-agentAge
   setup-educationLevel
+  setup-heatmap
 
 end
 
