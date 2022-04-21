@@ -277,6 +277,5 @@ to setup-monthlyWage
       set wage 25000
     ])
   ]
-
 end
 

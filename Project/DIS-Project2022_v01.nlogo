@@ -334,10 +334,10 @@ tickNum
 Number
 
 PLOT
-1343
-36
-1543
-186
+1352
+398
+1552
+548
 Histogram of age in region 1
 age
 voters
@@ -352,10 +352,10 @@ PENS
 "voters" 1.0 1 -955883 true "" "histogram [age] of voters with [region = 1]"
 
 PLOT
-1345
-229
-1545
-379
+1347
+228
+1547
+378
 Histogram of age in region 2
 age
 voters
@@ -370,10 +370,10 @@ PENS
 "default" 1.0 1 -8330359 true "" "histogram [age] of voters with [region = 2]"
 
 PLOT
-1350
-415
-1550
-565
+1348
+31
+1548
+181
 Histogram of age in region 3
 NIL
 NIL
@@ -389,9 +389,9 @@ PENS
 
 PLOT
 1607
-35
+402
 1807
-185
+552
 Level of education in region 1
 level of education
 voters
@@ -406,10 +406,10 @@ PENS
 "default" 1.0 1 -2674135 true "histogram [levelOfEducation] of voters with [region = 1]" "histogram [levelofeducation] of voters with [region = 1]"
 
 PLOT
-1606
-238
-1806
-388
+1605
+225
+1805
+375
 Level of education region 2
 level of education
 voters
@@ -424,10 +424,10 @@ PENS
 "default" 1.0 1 -10899396 true "histogram [levelofeducation] of voters with [region = 2]" "histogram [levelofeducation] of voters with [region = 2]"
 
 PLOT
-1606
-413
-1806
-563
+1598
+36
+1798
+186
 Level of education region 3
 level of education
 voters
