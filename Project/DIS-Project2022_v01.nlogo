@@ -452,6 +452,24 @@ show_messages
 1
 -1000
 
+PLOT
+1487
+590
+1687
+740
+Political attitude
+sympathy
+voters
+1.0
+3.0
+0.0
+0.0
+true
+false
+"set-plot-x-range 1 5\nset-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 5\n" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [levelofeducation] of voters with [region = 2]"
+
 @#$#@#$#@
 ## WHAT IS IT?
 
