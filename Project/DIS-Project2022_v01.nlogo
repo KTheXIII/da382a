@@ -15,7 +15,8 @@
 ; 2022-04-20 Integrated regions and their setup. Authors: Gabriella, Nour, Drilon, Nezar, Alban
 ; 2022-04-20 Integrated setup of voters age, education level. Authors: Ademir, Isac, Rasmus, Christian H., Johan
 ; 2022-04-20 Combined the code for the setup of voters and the creation of regions into the include file 'setupvoters.nls'. (gks)
-; 2022-04-21 Add histogram chart. Authors: PK, EL.
+; 2022-04-21 Add level of education and attitude histogram distrubution.
+;            Authors: Isac Petterson (IP), Johan Skäremo (JS), PK, EL, Christian Heisterkamp (CH), Ademir Zjajo (AZ)
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
