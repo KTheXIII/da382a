@@ -54,7 +54,7 @@ class heatmap {
         if (x > m_width - 1 || y > m_height - 1)
             return false;
 
-        auto i = y * m_height + x;
+        auto i = y * m_width + x;
         m_data[i] = value;
         return true;
     }
@@ -64,12 +64,13 @@ class heatmap {
         auto sum_mass = 0.0;
         for (std::size_t i = 0; i < m_height; i++) {
             for (std::size_t j = 0; j < m_width; j++) {
-                auto mass = m_data[i * m_height + j];
+                auto mass = m_data[i * m_width + j];
                 sum.x += double(j) * mass;
                 sum.y += double(i) * mass;
                 sum_mass += mass;
             }
         }
+        if (sum_mass == 0) sum_mass = 1.0;
         return {
             std::size_t(std::round(sum.x / sum_mass)),
             std::size_t(std::round(sum.y / sum_mass))
@@ -102,20 +103,24 @@ class heatmap {
 }
 
 auto main([[maybe_unused]]std::int32_t argc, [[maybe_unused]]char const* argv[]) -> std::int32_t {
-    constexpr std::size_t ROWS = 10;
-    constexpr std::size_t COLS = 10;
+    constexpr std::size_t ROWS = 3;
+    constexpr std::size_t COLS = 5;
     //constexpr std::size_t AGENT_COUNT = 10;
 
     //std::random_device rdev{};
     //std::mt19937 rng{rdev()};
     std::mt19937 rng{1};
     std::uniform_real_distribution<double> dist(0.0, 1.0);
-    auto rand_num = [&] {
-        return dist(rng);
-    };
-    mas::heatmap<double> heat{ROWS, COLS};
-    heat.init(rand_num);
-
+    //auto rand_num = [&] {
+    //    return dist(rng);
+    //};
+    mas::heatmap<double> heat{COLS, ROWS};
+    //heat.init(rand_num);
+    //heat.set(0, 1, 1.0);
+    //heat.set(1, 1, 1.0);
+    //heat.set(2, 1, 1.0);
+    //heat.set(3, 1, 1.0);
+    //heat.set(4, 1, 1.0);
     auto start = std::chrono::high_resolution_clock::now();
     auto cofm  = heat.center();
     auto duration = std::chrono::high_resolution_clock::now() - start;
