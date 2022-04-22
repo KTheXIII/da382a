@@ -19,11 +19,18 @@
 to setup-heatmap
   let rows attitude_rows
   let cols attitude_cols
+
   let polLeft 12.6
   let polSoc 39.5
   let polMid 9.3
   let polCons 22.1
   let polRight 15.7
+  
+  let tier1 polLeft
+  let tier2 polSoc + tier1
+  let tier3 polMid + tier2
+  let tier4 polCons + tier3
+  let tier5 polRight + tier4
 
   ask voters [
     let max_heat 10
@@ -31,17 +38,15 @@ to setup-heatmap
     let heatmap array:from-list n-values (cols * rows) [0]
     let polVal  random(100)
     let polIndex 0
+    
+    if polVal < tier1                    [set polIndex 0]
+    if tier1 < polVal and polVal < tier2 [set polIndex 1]
+    if tier2 < polVal and polVal < tier3 [set polIndex 2]
+    if tier3 < polVal and polVal < tier4 [set polIndex 3]
+    if tier4 < polVal and polVal < tier5 [set polIndex 4]
 
-    if polval < polLeft[set polIndex 0]
-    if (polSoc + polLeft) > polval and polval > polLeft[set polIndex 1]
-    if (polLeft + polSoc + polMid) > polval and polval > (polLeft + polSoc)[set polIndex 2]
-    if (polLeft + polSoc + polMid + polCons)> polVal and polval > (polLeft + polSoc + polMid)[set polIndex 3]
-    if (polLeft + polSoc + polMid + polCons + polRight) > polval and polval > (polLeft + polSoc + polMid + polCons)[set polIndex 4]
-;
     array:set heatmap (1 * cols + polIndex) 1
     add-belief create-belief "attitide-plane" heatmap
-;    array:set heatmap random int (rows * cols) random int max_heat
-;    add-belief create-belief "attitude-plane" heatmap
   ]
 end
 
