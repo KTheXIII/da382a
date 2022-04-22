@@ -80,20 +80,20 @@ to-report center-of-mass [heatmap]
   if sum_mass = 0 [set sum_mass 1]
   let x floor (item 0 sum_particles / sum_mass)
   let y floor (item 1 sum_particles / sum_mass)
-  let z array:item heatmap (y * rows + x)
+  let z array:item heatmap (y * cols + x)
   report (list x y z)
 end
 
 ; Sum the heat (x, y, z) conviction on our heatmap.
 ; This applies to the current agent.
 to sum-heatmap [heat]
-  let row attitude_rows
+  let cols attitude_cols
   let heatmap beliefs-of-type "attitude-plane"
   let hx item 0 heat  ; x
   let hy item 1 heat  ; y
   let hz item 2 heat  ; z
 
-  let index hy * row + hx
+  let index hy * cols + hx
   let current_z array:item heatmap index
   array:set heatmap index (current_z + hz)
 end
