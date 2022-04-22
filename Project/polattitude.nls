@@ -65,7 +65,7 @@ to-report center-of-mass [heatmap]
   foreach (n-values rows [i -> i]) [
     y -> foreach (n-values cols [j -> j]) [
       x ->
-      let index y * rows + x
+      let index y * cols + x
       let m array:item heatmap index
 
       let mx m * x
@@ -77,7 +77,7 @@ to-report center-of-mass [heatmap]
       set sum_mass (sum_mass + m)
     ]
   ]
-;  if sum_mass = 0 [set sum_mass 1]
+  if sum_mass = 0 [set sum_mass 1]
   let x floor (item 0 sum_particles / sum_mass)
   let y floor (item 1 sum_particles / sum_mass)
   let z array:item heatmap (y * rows + x)
