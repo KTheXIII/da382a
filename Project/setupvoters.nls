@@ -4,8 +4,12 @@
 
 ; 2022-04-20 Integrated regions and their setup. Authors: Gabriella, Nour, Drilon, Nezar, Alban
 ; 2022-04-20 Integrated setup of voters age, education level. Authors: Ademir, Isac, Rasmus, Christian H., Johan
+; 2022-04-21 Implemented wage distribution and family list.
+;            setup-monthlyWage: This distibute the wage value for different
+;                               agent based on percentage in the project description.
+;            setup-familyList: Find voters in a certain radius and add them to the family list.
+;            Authors: Isac Petterson (IP), Johan Skäremo (JS), Ademir Zjajo (AZ), Christian Heisterkamp (CH)
 ; 2022-04-21 Added setup-heatmap call in setup-voter function Authors: Eric Lundin, Pratchaya Khansomboon.
-;
 ;
 ;---------------------------------------------------
 
