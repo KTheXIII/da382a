@@ -115,8 +115,6 @@ to setup
         setup-voters
   ; --- end create and setup voters
 
-
-
   ;
   reset-ticks
   setup-plots
@@ -148,7 +146,6 @@ to go
   set old_year year
 
   ; Sending political messages to random selection of agents
-
 
   ; Changing the status of some random unemployed adults to employed
 
@@ -451,16 +448,23 @@ show_messages
 1
 -1000
 
-SWITCH
-43
-137
-146
-170
-tttt
-tttt
-0
-1
--1000
+PLOT
+10
+118
+205
+286
+Political attitude
+sympathy
+voters
+0.0
+5.0
+0.0
+0.0
+true
+false
+"set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5\n" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [current_pol_attitude] of voters"
 
 @#$#@#$#@
 ## WHAT IS IT?

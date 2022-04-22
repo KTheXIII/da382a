@@ -47,6 +47,8 @@ to setup-heatmap
 
     array:set heatmap (1 * cols + polIndex) 1
     add-belief create-belief "attitide-plane" heatmap
+    let com center-of-mass heatmap
+    set current_pol_attitude item 0 com
   ]
 end
 
@@ -58,12 +60,12 @@ to-report center-of-mass [heatmap]
   let rows attitude_rows
   let cols attitude_cols
 
-  let sum_mass 0
-  let sum_particles list 0 0
+  let sum_mass 0.0
+  let sum_particles list 0.0 0.0
   foreach (n-values rows [i -> i]) [
     y -> foreach (n-values cols [j -> j]) [
       x ->
-      let index y * rows + x
+      let index y * cols + x
       let m array:item heatmap index
 
       let mx m * x
@@ -76,22 +78,22 @@ to-report center-of-mass [heatmap]
     ]
   ]
   if sum_mass = 0 [set sum_mass 1]
-  let x round (item 0 sum_particles / sum_mass)
-  let y round (item 1 sum_particles / sum_mass)
-  let z array:item heatmap (y * rows + x)
+  let x floor (item 0 sum_particles / sum_mass)
+  let y floor (item 1 sum_particles / sum_mass)
+  let z array:item heatmap (y * cols + x)
   report (list x y z)
 end
 
 ; Sum the heat (x, y, z) conviction on our heatmap.
 ; This applies to the current agent.
 to sum-heatmap [heat]
-  let row attitude_rows
+  let cols attitude_cols
   let heatmap beliefs-of-type "attitude-plane"
   let hx item 0 heat  ; x
   let hy item 1 heat  ; y
   let hz item 2 heat  ; z
 
-  let index hy * row + hx
+  let index hy * cols + hx
   let current_z array:item heatmap index
   array:set heatmap index (current_z + hz)
 end
@@ -119,7 +121,6 @@ to-report neighbour-check [message heatmap]
 
   report dist_x <= 1 xor dist_y <= 1
 end
-
 
 ; This controls our reactive layer.
 to react-heatmap
