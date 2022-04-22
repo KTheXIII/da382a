@@ -9,8 +9,16 @@
 ;            if it pass the neighbour check procudure which uses 
 ;            Manhattan distancing.
 ;            Authors: Pratchaya Khansomboon (PK), Eric Lundin 
-;           (EL), Marcus Linné (ML), Linnéa Mörk (LM)
+;            (EL), Marcus Linné (ML), Linnéa Mörk (LM)
 ; 2022-04-15 Fix center of mass calculation, PK
+; 2022-04-21 Political attitude generation for based on the
+;            project description. This value is set in setup-heatmap
+;            for every agent.
+;            Author: EL, PK
+; 2022-04-22 Fixes matrix indexing for setup-heatmap and center of
+;            mass calculation. This causes problem when we were trying to chart 
+;            the political attitude percentages.
+;            Author: PK
 ;
 ;---------------------------------------------------
 
