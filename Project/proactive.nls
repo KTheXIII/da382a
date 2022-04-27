@@ -39,8 +39,8 @@ end
 
 ; -- Children  --
 to schooling
-  print "Schooling state"
-  print "Understand the world surronding!"
+  ;print "Schooling state"
+  ;print "Understand the world surronding!"
 end
 
 ; -- Adults --
@@ -53,7 +53,7 @@ end
 
 ; Adult, do not have a job. 
 to has-no-job
-  print "Applying for jobs"
+  ;print "Applying for jobs"
   if flagEmployed
   [set current_state [ -> has-a-job ]]
   
@@ -87,5 +87,5 @@ end
 
 ; -- Elderly --
 to at-elderly-home
-  print "At elderly home!"
+  ;print "At elderly home!"
 end

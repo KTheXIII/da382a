@@ -15,7 +15,8 @@
 ; 2022-04-20 Integrated regions and their setup. Authors: Gabriella, Nour, Drilon, Nezar, Alban
 ; 2022-04-20 Integrated setup of voters age, education level. Authors: Ademir, Isac, Rasmus, Christian H., Johan
 ; 2022-04-20 Combined the code for the setup of voters and the creation of regions into the include file 'setupvoters.nls'. (gks)
-;
+; 2022-04-21 Fixed a bug in sum-heatmap.
+; 2022-04-21 Extended process_messages and added inform political attitude, friend-request, and remove-friend are added (Marcus, Linnéa, Mouad, Reem, Petter)
 ; ************ INCLUDED FILES *****************
 __includes [
     "bdi.nls"
@@ -114,11 +115,14 @@ to setup
         setup-regions
         ; creation and setup of agents
         setup-voters
+        setup-heatmap
   ; --- end create and setup voters
 
 
 
   ;
+
+
   reset-ticks
   setup-plots
 end
@@ -162,6 +166,8 @@ to go
   ; Trying to implement a Hybrid-Agent architecture with a ractive part running the intentions on
   ; the intention stack and the proactive part with a deliberation of status, states and goals
 ;
+
+
  ; Ask agents to do something.
   ask voters [
     process-messages ; process messages in the message-queue.
@@ -193,6 +199,73 @@ to process-messages
   ; Logic for adding incoming conviction value into the our current agent
   ; conviction queue for later processing. This is required because the
   ; intention stack cannot store data.
+
+  while [get-message-no-remove != "no_message"]
+  [
+    let msg get-message
+    ifelse get-performative msg = "inform"
+    [
+      let type-content item 0 get-content msg
+      ifelse type-content = "pol_attitude"
+      [
+        let xyz item 1 get-content msg
+        add-intention (word "sum-heatmap" xyz) "true"
+        ;sum-heatmap (xyz)
+      ]
+      [
+      ifelse type-content = "removed-from-list"
+      [
+        let friend-id get-sender msg
+        add-intention (word "remove-friend " friend-id ) "true"
+      ]
+      [
+      ; ... else another type-content
+      ]
+      ]
+    ][
+    ifelse get-performative msg = "request"
+    [
+     let type-content item 0 get-content msg
+     ifelse type-content = "friend-request"
+     [
+       let friend-id get-sender msg
+       let xyz item 1 get-content msg
+       add-intention (word "add-friend " friend-id " " xyz) "true"
+     ]
+     [
+     ; ... else another type-content
+     ]
+    ]
+    [
+    ifelse get-performative msg = "agree"
+    [
+      let type-content item 0 get-content msg
+      ifelse type-content = "friend-request"
+      [
+          ;"Agreed friend request"
+      ]
+      [
+        ; ... else another type-content
+      ]
+      ]
+    [
+    ifelse get-performative msg = "cancel"
+    [
+      let type-content item 0 get-content msg
+      ifelse type-content = "friend-request"
+      [
+      ; print "Cancelled friend request"
+      ]
+      [
+      ; .. else another type-content
+      ]
+    ]
+   []
+   ]
+   ]
+   ]
+  ]
+
   let conviction_queue (list [])
   if exist-beliefs-of-type "incoming-conviction"
   [set conviction_queue beliefs-of-type "incoming-conviction"]
@@ -231,7 +304,19 @@ to perceive-environment
   ;--end proactive behavior testing part ---
 end
 
+; ... Implemented by other group.
+to add-friend [id pol_attitude]
+print "add-friend"
+print id
+print pol_attitude
+; Implemented by other group.
+end
 
+; ... Implemented by other group.
+to remove-friend [id]
+print "remove-friend"
+; Implemented by other group.
+end
 
 ;************** end function and report part **************
 @#$#@#$#@
@@ -269,7 +354,7 @@ SWITCH
 449
 show-intentions
 show-intentions
-0
+1
 1
 -1000
 
