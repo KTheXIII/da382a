@@ -2,20 +2,23 @@
 
 set -e
 
-in=$1
-out="${in%.*}"
+bin="bin"
+obj="obj"
 
-bin=bin
-obj=obj
+in="${1}"
+out="${in%.*}"
+out="${out##*/}"
 
 cpp_version=-std=c++20
 warnings="-Wall -Wextra -Wpedantic -Werror -Wno-missing-field-initializers"
-includes="-I. -I${STB_PATH}"
-#others="-O3"
+target_dir=bin
+include_dir="-I. -I${STB_PATH}"
+library=""
+compile_flags="${cpp_version} ${warnings} ${include_dir} ${library}"
 
-compile_flags="${cpp_version} ${warnings} ${includes} ${others}"
+mkdir -p ${bin}
+mkdir -p ${obj}
 
-mkdir -p $bin
-
-c++ $compile_flags $in -o $bin/$out
+# compile
+c++ ${compile_flags} ${in} -o ${bin}/${out}
 
