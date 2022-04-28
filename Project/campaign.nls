@@ -1,36 +1,36 @@
 ; DIS-Project2022 (temporary name-please find a better one!!)
 
 ;assigns campaign voters at random with a 10% chance
-to campaign-setup [
+to campaign-setup
   ask voters[
     let chance random 10
     if chance = 10[
       add-belief list "campaign-flag" "true"
     ]
   ]
-]
+end
 
 ;distributes campaign helpers randomly and gives them an area of influence 
-to campaign-distribute[
-  ask voters with exists-belief "campaign-flag"[
+to campaign-distribute
+  ask voters with [exists-belief "campaign-flag"][
     let old-home list xcor ycor
     add-belief list "old-home" old-home
     setxy random-pxcor random-pycor
     
     let radius (random 10) + 10
-    add-belief list "campaign-radius" side
+    add-belief list "campaign-radius" radius
   ]
-] 
+end
 
 ; informs the voters in area of the campaigner 
-to campaign-inform[
-  ask voters with exists-belief "campaign-flag"[
-    let radius belief-turtle "campaign-radius"
+to campaign-inform
+  ask voters with [exists-belief "campaign-flag"][
+    let radius (item 1 (item 0 beliefs-of-type "campaign-radius"))
     let voter-recipients other voters in-radius radius
     let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
     let pol-attitude center-of-mass heatmap
     
-    for voter-recipients [
+    foreach voter-recipients [
       let informMsg create-message "inform"
       set informMsg add-receiver 2 informMsg
       set informMsg add-content (list "pol-attitude" (pol-attitude)) informMsg
@@ -38,4 +38,4 @@ to campaign-inform[
       send informMsg
     ]
   ]
-]
+end
