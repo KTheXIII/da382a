@@ -19,7 +19,8 @@
 ;            Authors: Isac Petterson (IP), Johan Skäremo (JS), PK, EL, Christian Heisterkamp (CH), Ademir Zjajo (AZ)
 ; 2022-04-21 Fixed a bug in sum-heatmap.
 ; 2022-04-21 Extended process_messages and added inform political attitude, friend-request, and remove-friend are added (Marcus, Linnéa, Mouad, Reem, Petter)
-;
+; 2022-04-28 Fix indentation and bracket hell in process-message routine
+;            Author: PK
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
@@ -221,44 +222,83 @@ end
 ; ************** FUNCTION and REPORT PART **************
 
 
-to-report performative-inform [message]
+; Inform
+to process-pol-attitude [content_type message]
+  if content_type = "pol_attitude" [
+    let xyz item 1 get-content message
+    add-intention (word "sum-heatmap" xyz) "true"
+  ]
+end
+
+to process-remove-from-list [content_type message]
+  if content_type = "remove-from-list" [
+    let friend-id get-sender message
+    add-intention (word "remove-friend " friend-id ) "true"
+  ]
+end
+
+; Request
+to process-request-add-friend [content_type message]
+  if content_type = "friend-request" [
+    let friend-id get-sender message
+    let xyz item 1 get-content message
+    add-intention (word "add-friend " friend-id " " xyz) "true"
+  ]
+end
+
+to process-request-campaign-attitude [content_type message]
+  ; TODO: Week 17 Task 8.4
+end
+
+; Agree
+to process-agree-add-friend [content_type message]
+  if content_type = "friend-request" [
+    ; TODO: Accept friend request
+  ]
+end
+
+; Cancel
+to process-cancel-add-friend [content_type message]
+  if content_type = "friend-request" [
+    ; TODO: Cancel/Deny friend request
+  ]
+end
+
+; Performative routines
+to performative-inform [content_type message]
+  ; "inform" messages procedure
   if get-performative message = "inform" [
-    ; TODO: "inform" messages
-    ;       1. "pol_attitude"
-    ;       2. "remove-from-list
-
-    report []
+    ; "pol_attitude"
+    process-pol-attitude content_type message
+    ; "remove-from-list"
+    process-remove-from-list content_type message
   ]
-  report message
 end
 
-to-report performative-request [message]
-  if get-performative message = "request" [
-    ; TODO: "request" messages
-    ;       1. "friend-request"
-    ;       2. "campaign-attitude"
-
-    report []
+to performative-request [content_type message]
+  ; "request" messages
+  if get-performative message != "request" [
+    ; "friend-request"
+    process-request-add-friend content_type message
+    ; "campaign-attitude"
+    process-request-campaign-attitude content_type message
   ]
-  report message
 end
 
-to-report performative-agree [message]
-  if get-performative message = "agree" [
-    ; TODO: "agree" messages
-    ;       1. "friend-request"
-    report []
+to performative-agree [content_type message]
+  ; "agree" messages
+  if get-performative message != "agree" [
+    ; "friend-request"
+    process-agree-add-friend content_type message
   ]
-  report message
 end
 
-to-report performative-cancel [message]
+to performative-cancel [content_type message]
+    ; "cancel" messages
   if get-performative message = "cancel" [
-    ; TODO: "cancel" messages
-    ;       1. "friend-request"
-    report []
+    ; "friend-request"
+    process-cancel-add-friend content_type message
   ]
-  report message
 end
 
 to process-messages
@@ -272,19 +312,20 @@ to process-messages
   ; intention stack cannot store data.
   while [get-message-no-remove != "no_message"] [
     let msg get-message  ; pop the message stack
+    let content_type item 0 get-content msg
 
     ; Check and run the performative which determine what type of message it is.
     ; This section of code will either return back the message which will be
     ; used for later branches or return emtpy list to selectively run next block.
 
     ; inform
-    set msg (performative-inform msg)
+    performative-inform content_type msg
     ; request
-    set msg (performative-request msg)
+    performative-request content_type msg
     ; agree
-    set msg (performative-agree msg)
+    performative-agree content_type msg
     ; cancel
-    set msg (performative-cancel msg)
+    performative-cancel content_type msg
   ]
 
   let conviction_queue (list [])
