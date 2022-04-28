@@ -10,8 +10,11 @@
 ;            setup-familyList: Find voters in a certain radius and add them to the family list.
 ;            Authors: Isac Petterson (IP), Johan Skäremo (JS), Ademir Zjajo (AZ), Christian Heisterkamp (CH)
 ; 2022-04-21 Added setup-heatmap call in setup-voter function Authors: Eric Lundin, Pratchaya Khansomboon.
+; 2022-04-27 heatmap functions moved to polattitude.nls (gks)
 ;
 ;---------------------------------------------------
+
+
 
 
 
@@ -209,8 +212,8 @@ to setup-educationLevel
                                                        [set levelOfEducation 2]
   ask n-of round(numAgentRegion1 * (0.24)) voters with [(levelOfEducation = -1) and (region = 1)]
                                                        [set levelOfEducation 3]
- ;ask voters with [(levelOfEducation = -1) and (region = 1)]
- ;                                                      [set levelOfEducation random(3)]
+  ask voters with [(levelOfEducation = -1) and (region = 1)]
+                                                       [set levelOfEducation random(3)]
   
   
    ;Region 2
@@ -223,8 +226,8 @@ to setup-educationLevel
                                                        [set levelOfEducation 2]
   ask n-of round(numAgentRegion2 * (0.27)) voters with [(levelOfEducation = -1) and (region = 2)]
                                                        [set levelOfEducation 3]
- ;ask voters with [(levelOfEducation = -1) and (region = 2)]
- ;                                                      [set levelOfEducation random(3)]
+  ask voters with [(levelOfEducation = -1) and (region = 2)]
+                                                       [set levelOfEducation random(3)]
   
   ;Region 3
    ;PrG (=1) 5%
@@ -236,8 +239,8 @@ to setup-educationLevel
                                                        [set levelOfEducation 2]
   ask n-of round(numAgentRegion3 * (0.70)) voters with [(levelOfEducation = -1) and (region = 3)]
                                                        [set levelOfEducation 3]
- ;ask voters with [(levelOfEducation = -1) and (region = 3)]
- ;                                                      [set levelOfEducation random(3)]
+  ask voters with [(levelOfEducation = -1) and (region = 3)]
+                                                       [set levelOfEducation random(3)]
   
   
   ; trying to verify the distribution for debugging
@@ -296,7 +299,7 @@ to setup-familyList
     let numOfFamilyMembers 3 + random 5
     let radius 0
     
-    while [(NumOfFamilyMembers > 0)] [
+    while [(numOfFamilyMembers > 0)] [
       ask voters in-radius radius [
         if numOfFamilyMembers > 0 [
           if myId != who and member? who fmList != true [
@@ -311,4 +314,3 @@ to setup-familyList
   ] 
   
 end
-

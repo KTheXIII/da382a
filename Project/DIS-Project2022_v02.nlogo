@@ -19,9 +19,11 @@
 ;            Authors: Isac Petterson (IP), Johan Skäremo (JS), PK, EL, Christian Heisterkamp (CH), Ademir Zjajo (AZ)
 ; 2022-04-21 Fixed a bug in sum-heatmap.
 ; 2022-04-21 Extended process_messages and added inform political attitude, friend-request, and remove-friend are added (Marcus, Linnéa, Mouad, Reem, Petter)
+;
+;
 ; ************ INCLUDED FILES *****************
 __includes [
-    "bdi.nls"
+    "bdimod.nls" ; modified version that allows certain intentions to pass values along
     "communication.nls"
     "setupvoters.nls"
     "proactive.nls"
@@ -89,6 +91,9 @@ voters-own [
   wage old_wage
   region
   current_pol_attitude ; holds x and y values of attitude plane
+  current_pol_array; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
+  pol_tbl ; table for the political plane with key "x y"
+  conv_tbl ; table for the political conviction, with same key "x y"
   ]
 ; *********************end agent-specific variables *************
 
@@ -110,18 +115,17 @@ to setup
   set attitude_cols 5
 
   ; Create the regions
+  setup-regions
 
   ; Create and setup voters (functions included in 'setupvoters.nls'
         ; set the regions of the agents
-        setup-regions
         ; creation and setup of agents
         setup-voters
-        setup-heatmap
   ; --- end create and setup voters
 
+
+
   ;
-
-
   reset-ticks
   setup-plots
 end
@@ -153,6 +157,7 @@ to go
 
   ; Sending political messages to random selection of agents
 
+
   ; Changing the status of some random unemployed adults to employed
 
   ; Changing the status of some random employed adults to employed
@@ -164,17 +169,44 @@ to go
   ; Trying to implement a Hybrid-Agent architecture with a ractive part running the intentions on
   ; the intention stack and the proactive part with a deliberation of status, states and goals
 ;
-
-
  ; Ask agents to do something.
   ask voters [
-    process-messages ; process messages in the message-queue.
-    perceive-environment ; updates beliefs about the environment
+;    process-messages ; process messages in the message-queue.
+;    perceive-environment ; updates beliefs about the environment
 
     ; Execute all of the intentions on the intention-stack as reactive behaviors
-    while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
-    proactive-behavior ; finite state machine for the proactive behavior
+;    while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
+;    proactive-behavior ; finite state machine for the proactive behavior
+
   ]
+
+  ; testing sending messages
+    ; analyzing the way messages are built
+    ;set informMsg lput "[text [1 1 10]]" lput "content:" (lput (word "receiver:" 2) (list "inform" (word "sender:" who) ) )
+    ;print word "nya informMsg= " informMsg
+
+    ;send lput "[text [1 1 10]]" lput "content:" (lput (word "receiver:" 2) (list "inform" (word "sender:" who) ) )
+    ;print  "string sent"
+  ask one-of voters [
+    ;let receiver ([who] of voters in-cone 10 90)
+    ;print receiver
+    let informMsg create-message "inform"
+    set informMsg add-receiver 2 informMsg
+    ;set informMsg add-receiver receiver informMsg
+    ;set informMsg add-multiple-receivers receiver informMsg
+    set informMsg add-content (list "text" (list 1 1 10)) informMsg
+    print informMsg
+    ;send informMsg
+
+    ; trying to put the message on the intention stack
+    add-intention "send" informMsg
+    execute-intentions
+  ]
+  ask voter 2 [
+    print incoming-queue
+  ]
+
+
 
   ;----- End Agents to-go part ----------------------------------------
   ;
@@ -316,6 +348,8 @@ print "remove-friend"
 ; Implemented by other group.
 end
 
+
+
 ;************** end function and report part **************
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -346,10 +380,10 @@ ticks
 30.0
 
 SWITCH
-12
-416
-155
-449
+3
+502
+132
+535
 show-intentions
 show-intentions
 1
@@ -357,25 +391,25 @@ show-intentions
 -1000
 
 SLIDER
-11
-366
-183
-399
+3
+457
+191
+490
 num-agents
 num-agents
 5
-100
-100.0
+700
+154.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-25
-28
-88
-61
+4
+39
+67
+72
 setup
 setup
 NIL
@@ -389,10 +423,10 @@ NIL
 1
 
 BUTTON
-115
-30
-178
-63
+140
+40
+203
+73
 go
 go
 NIL
@@ -406,10 +440,10 @@ NIL
 1
 
 INPUTBOX
-13
-295
-67
-355
+142
+520
+192
+580
 tickNum
 1.0
 1
@@ -417,10 +451,10 @@ tickNum
 Number
 
 PLOT
-1352
-398
-1552
-548
+1347
+399
+1547
+549
 Histogram of age in region 1
 age
 voters
@@ -432,13 +466,13 @@ false
 false
 "set-plot-x-range 0 100\nset-plot-y-range 0 count (voters with [region = 1])\nset-histogram-num-bars 5" ""
 PENS
-"voters" 1.0 1 -955883 true "" "histogram [age] of voters with [region = 1]"
+"voters" 1.0 1 -13345367 true "" "histogram [age] of voters with [region = 1]"
 
 PLOT
-1347
-228
-1547
-378
+1345
+229
+1545
+379
 Histogram of age in region 2
 age
 voters
@@ -453,32 +487,32 @@ PENS
 "default" 1.0 1 -8330359 true "" "histogram [age] of voters with [region = 2]"
 
 PLOT
-1348
-31
-1548
-181
-Histogram of age in region 3
-NIL
-NIL
+1346
+43
+1545
+194
+Histogram of age in regions 3
+age
+voters
 0.0
-10.0
+100.0
 0.0
-10.0
+0.0
 true
 false
-"set-plot-x-range 0 100\nset-plot-y-range 0 count (voters with [region = 3])\nset-histogram-num-bars 5" ""
+"set-plot-x-range 0 100\n;set-plot-y-range 0 floor(count voters) / 3\nset-histogram-num-bars 5" ""
 PENS
-"default" 1.0 1 -14070903 true "" "histogram [age] of voters with [region = 3]"
+"region-3" 1.0 1 -955883 true "histogram [age] of voters with [region = 3]" "histogram [age] of voters with [region = 3]"
 
 PLOT
-1607
-402
-1807
-552
-Level of education in region 1
+1565
+398
+1765
+548
+Histogram level of education in region 1
 level of education
 voters
-1.0
+0.0
 4.0
 0.0
 10.0
@@ -486,35 +520,35 @@ true
 false
 ";set-plot-x-range 1 3\n;set-plot-y-range 0 count (voters with [region = 1])\nset-histogram-num-bars 3" ""
 PENS
-"default" 1.0 1 -2674135 true "histogram [levelOfEducation] of voters with [region = 1]" "histogram [levelofeducation] of voters with [region = 1]"
+"default" 1.0 1 -13345367 true "histogram [levelOfEducation] of voters with [region = 1]" "histogram [levelofeducation] of voters with [region = 1]"
 
 PLOT
-1605
-225
-1805
-375
+1565
+228
+1765
+378
 Level of education region 2
 level of education
 voters
-1.0
+0.0
 4.0
 0.0
-10.0
+30.0
 true
 false
-";set-plot-x-range 1 3\n;set-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 3" ""
+"set-plot-x-range 0 4\nset-plot-y-range 0 count (voters with [region = 2])\nset-histogram-num-bars 3" ""
 PENS
 "default" 1.0 1 -10899396 true "histogram [levelofeducation] of voters with [region = 2]" "histogram [levelofeducation] of voters with [region = 2]"
 
 PLOT
-1598
-36
-1798
-186
+1563
+41
+1763
+191
 Level of education region 3
 level of education
 voters
-1.0
+0.0
 4.0
 0.0
 10.0
@@ -522,36 +556,54 @@ true
 false
 ";set-plot-x-range 1 3\n;set-plot-y-range 0 count voters with [region = 3]\nset-histogram-num-bars 3" ""
 PENS
-"default" 1.0 1 -13345367 true "histogram [levelOfEducation] of voters with [region = 3]" "histogram [levelOfEducation] of voters with [region = 3]"
+"default" 1.0 1 -955883 true "histogram [levelOfEducation] of voters with [region = 3]" "histogram [levelOfEducation] of voters with [region = 3]"
 
 SWITCH
-10
-473
-156
-506
+3
+546
+131
+579
 show_messages
 show_messages
-0
+1
 1
 -1000
 
 PLOT
-10
-118
+5
+106
 205
-286
+256
 Political attitude
-sympathy
-voters
+political spectrum
+Nr voters
 0.0
 5.0
 0.0
-0.0
+10.0
 true
 false
-"set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5\n" ""
+"set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5"
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [current_pol_attitude] of voters"
+"default" 1.0 1 -16777216 true "histogram [current_pol_attitude] of voters" "histogram [current_pol_attitude] of voters"
+
+PLOT
+5
+281
+205
+431
+alternative Political attitude
+political spectrum
+Nr voters
+0.0
+10.0
+0.0
+10.0
+true
+false
+"set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 3\nset-histogram-num-bars 5" ""
+PENS
+"default" 1.0 1 -2674135 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "histogram [array:item current_pol_array 0] of voters"
 
 @#$#@#$#@
 ## WHAT IS IT?

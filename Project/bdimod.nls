@@ -4,6 +4,8 @@
 ;;; Original Version for Netlogo 2 (2005) I. Sakellariou
 ;;; Adapted to NetLogo 4 (2008) I. Sakellariou
 
+;;; changed execute-intentions in order to allow for certain intentions to include values, (2022) Gion Koch Svedberg
+
 ;;; Requirements
 ;;; 1) All agents that modeled as "BDI" agent have two declared -own variables beliefs intentions.
 ;;; These are the variables to which all beliefs and intentions are recorded. So, in your model if there is a breed of turtles 
@@ -85,13 +87,24 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to execute-intentions
-;;;locals [myInt]  ;; first intentions
   if empty? intentions [stop]
   let myInt get-intention
   if show-intentions [set label myInt] ;; Just for debugging. 
   if show-intentions [show myInt] ;; Just for debugging. 
-  run intention-name myInt
-  if runresult intention-done myInt [remove-intention myInt]
+  let cmd intention-name myInt
+  ifelse member? cmd "send sum-heatmap xxx yyy"
+   [
+    let val intention-done myInt
+    if cmd = "send" [send val]
+    if cmd = "sum-heatmap" [sum-heatmap val]
+    ;if cmd = "xxx" [xxx val]
+    ;if cmd = "yyy" [yyy val]
+    remove-intention myInt
+  ]
+  [
+    run intention-name myInt
+    if runresult intention-done myInt [remove-intention myInt]
+  ]
   ;if show-intentions [set label intentions] ;; Just for debugging. 
 end 
 
