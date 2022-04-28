@@ -172,7 +172,7 @@ to go
 ;
  ; Ask agents to do something.
   ask voters [
-;    process-messages ; process messages in the message-queue.
+    process-messages ; process messages in the message-queue.
 ;    perceive-environment ; updates beliefs about the environment
 
     ; Execute all of the intentions on the intention-stack as reactive behaviors
@@ -221,6 +221,46 @@ end
 ; ************** FUNCTION and REPORT PART **************
 
 
+to-report performative-inform [message]
+  if get-performative message = "inform" [
+    ; TODO: "inform" messages
+    ;       1. "pol_attitude"
+    ;       2. "remove-from-list
+
+    report []
+  ]
+  report message
+end
+
+to-report performative-request [message]
+  if get-performative message = "request" [
+    ; TODO: "request" messages
+    ;       1. "friend-request"
+    ;       2. "campaign-attitude"
+
+    report []
+  ]
+  report message
+end
+
+to-report performative-agree [message]
+  if get-performative message = "agree" [
+    ; TODO: "agree" messages
+    ;       1. "friend-request"
+    report []
+  ]
+  report message
+end
+
+to-report performative-cancel [message]
+  if get-performative message = "cancel" [
+    ; TODO: "cancel" messages
+    ;       1. "friend-request"
+    report []
+  ]
+  report message
+end
+
 to process-messages
 ; reads and interprets all the messages on the message-queue (might need a while-loop)
   ; -> updates beliefs and variables
@@ -230,71 +270,21 @@ to process-messages
   ; Logic for adding incoming conviction value into the our current agent
   ; conviction queue for later processing. This is required because the
   ; intention stack cannot store data.
+  while [get-message-no-remove != "no_message"] [
+    let msg get-message  ; pop the message stack
 
-  while [get-message-no-remove != "no_message"]
-  [
-    let msg get-message
-    ifelse get-performative msg = "inform"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "pol_attitude"
-      [
-        let xyz item 1 get-content msg
-        add-intention (word "sum-heatmap" xyz) "true"
-        ;sum-heatmap (xyz)
-      ]
-      [
-      ifelse type-content = "removed-from-list"
-      [
-        let friend-id get-sender msg
-        add-intention (word "remove-friend " friend-id ) "true"
-      ]
-      [
-      ; ... else another type-content
-      ]
-      ]
-    ][
-    ifelse get-performative msg = "request"
-    [
-     let type-content item 0 get-content msg
-     ifelse type-content = "friend-request"
-     [
-       let friend-id get-sender msg
-       let xyz item 1 get-content msg
-       add-intention (word "add-friend " friend-id " " xyz) "true"
-     ]
-     [
-     ; ... else another type-content
-     ]
-    ]
-    [
-    ifelse get-performative msg = "agree"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "friend-request"
-      [
-          ;"Agreed friend request"
-      ]
-      [
-        ; ... else another type-content
-      ]
-      ]
-    [
-    ifelse get-performative msg = "cancel"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "friend-request"
-      [
-      ; print "Cancelled friend request"
-      ]
-      [
-      ; .. else another type-content
-      ]
-    ]
-   []
-   ]
-   ]
-   ]
+    ; Check and run the performative which determine what type of message it is.
+    ; This section of code will either return back the message which will be
+    ; used for later branches or return emtpy list to selectively run next block.
+
+    ; inform
+    set msg (performative-inform msg)
+    ; request
+    set msg (performative-request msg)
+    ; agree
+    set msg (performative-agree msg)
+    ; cancel
+    set msg (performative-cancel msg)
   ]
 
   let conviction_queue (list [])
