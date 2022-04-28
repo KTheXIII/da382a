@@ -172,7 +172,7 @@ to go
  ; Ask agents to do something.
   ask voters [
 ;    process-messages ; process messages in the message-queue.
-;    perceive-environment ; updates beliefs about the environment
+     perceive-environment ; updates beliefs about the environment
 
     ; Execute all of the intentions on the intention-stack as reactive behaviors
 ;    while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
@@ -315,7 +315,7 @@ to perceive-environment
 
 
   ; if changed status, set new current state
-  ; call proactive-behavior
+  proactive-behavior
 
 
 

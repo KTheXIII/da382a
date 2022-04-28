@@ -31,12 +31,25 @@ to setup-initialState
 end
 
 
+; exists-belief
 to proactive-behavior ; 
+  if exist-beliefs-of-type "campaign-flag" [
+    set current_state [ -> working-for-campaign ]
+  ]
+  
   run current_state
 end
 
 ; Definition of the states
 
+to working-for-campaign
+  print "Working for campaign"
+  
+  ;Subtask 2: Skicka politiska meddelanden till sina vänner och deras vänner
+  
+  ;Pratchaya kod??
+  
+end
 ; -- Children  --
 to schooling
   print "Schooling state"
