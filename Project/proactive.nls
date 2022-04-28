@@ -8,8 +8,6 @@
 ;---------------------------------------------------
 
 
-
-
 ; Sets in ini
 to setup-initialState
   (ifelse
@@ -31,7 +29,7 @@ to setup-initialState
 end
 
 
-to proactive-behavior ; 
+to proactive-behavior
   run current_state
 end
 
@@ -51,38 +49,37 @@ to has-a-job
   ]
 end
 
-; Adult, do not have a job. 
+; Adult, do not have a job.
 to has-no-job
   print "Applying for jobs"
   if flagEmployed
   [set current_state [ -> has-a-job ]]
-  
+
   ; Update this 
   ;if conditions for feel-confirmed.
   ;[]
 end
 
 to feel-confirmed
-  ;let tmp_advance-in-career true ; just a for testing... check: education-level='PoG' and increase(old_BW,BW) > 5%  
+  ;let tmp_advance-in-career true ; just a for testing... check: education-level='PoG' and increase(old_BW,BW) > 5%
   if levelOfEducation > 0.05 and ( wage / old_wage) > 1.05 [
     set current_state [-> gain-status]
   ]
-  
+
   ; if conditions for "have-friends state"
   ;[]
 end
 
 to gain-status
-  
+
 end
 
 to have-friends
-  
 end
 
 ; Unemployed trying to find like minded people 
 to find-like-minded
-  
+
 end
 
 ; -- Elderly --

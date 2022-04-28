@@ -41,15 +41,15 @@ end
 to receive [msg]
    if show_messages [show msg]
    set incoming-queue lput msg incoming-queue
-end 
+end
 
 ;; This reporter returns the next message in the list and removes it from the queue.
 to-report get-message
   if empty? incoming-queue [report "no_message"]
   let nextmsg first incoming-queue
   remove-msg
-  report nextmsg     
-end 
+  report nextmsg
+end
 
 ;; This reporter returns the next message in the list WITHOUT removimg it from the queue.
 to-report get-message-no-remove
@@ -57,11 +57,11 @@ to-report get-message-no-remove
   report first incoming-queue
 end
 
-;; Explicit remove-msg. 
+;; Explicit remove-msg.
 ;; This is needed since reporters *cannot* change a variable's values (apparently). 
 to remove-msg
   set incoming-queue but-first incoming-queue
-end 
+end
 
 ;; broadcasting to all agents of breed t-breed
 to broadcast-to [t-breed msg agent]
@@ -70,9 +70,9 @@ to broadcast-to [t-breed msg agent]
       ;;;do nothing
       ][
        send add-receiver i msg 
-      ]        
+      ]
   ]
-end 
+end
 
 
 ;; Creating Messages and adding the sender.
@@ -81,12 +81,11 @@ to-report create-message [performative]
 end 
 
 to-report create-reply [performative msg]
-let msgOut 0
-    
- set msgOut create-message performative
- set msgOut add-receiver (get-sender msg) msgOut
- report msgOut
-end 
+  let msgOut 0
+  set msgOut create-message performative
+  set msgOut add-receiver (get-sender msg) msgOut
+  report msgOut
+end
 
 
 ;; Accesing information on Messages
@@ -104,12 +103,12 @@ end
 ;; Reports the list of receivers of a message
 to-report get-receivers [msg]
   report map [i -> remove "receiver:" i] filter [i -> not is-number? i and member? "receiver:" i] msg
-end 
+end
 
 ;; reports the message performative. 
 to-report get-performative [msg]
   report first msg
-end 
+end
 
 ;;; ADDING FIELDS TO A MESSAGE
 ;; Adding a sender to a message.
@@ -141,4 +140,5 @@ to-report add [msg field value]
   ifelse field = "content:"
   [report lput value lput field msg]
   [report lput (word field value) msg]
-end  
+end
+

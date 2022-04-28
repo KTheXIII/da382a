@@ -24,23 +24,20 @@
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
-    "bdimod.nls" ; modified version that allows certain intentions to pass values along
-    "communication.nls"
-    "setupvoters.nls"
-    "proactive.nls"
-    "polattitude.nls"
-    "campaign.nls"
-  ;
-  ;
-
+  "bdimod.nls" ; modified version that allows certain intentions to pass values along
+  "communication.nls"
+  "setupvoters.nls"
+  "proactive.nls"
+  "polattitude.nls"
+  "campaign.nls"
 ]
 ; ********************end included files ********
 
 ; ************ EXTENSIONS *****************
 extensions [
-; vid ; used for recording of the simulation
-array
-table
+  ; vid ; used for recording of the simulation
+  array
+  table
 ]
 ; ********************end extensions ********
 
@@ -93,10 +90,10 @@ voters-own [
   wage old_wage
   region
   current_pol_attitude ; holds x and y values of attitude plane
-  current_pol_array; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
-  pol_tbl ; table for the political plane with key "x y"
-  conv_tbl ; table for the political conviction, with same key "x y"
-  ]
+  current_pol_array    ; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
+  pol_tbl              ; table for the political plane with key "x y"
+  conv_tbl             ; table for the political conviction, with same key "x y"
+]
 ; *********************end agent-specific variables *************
 
 ; ************* PATCH-SPECIFIC VARIABLES *********
@@ -124,8 +121,6 @@ to setup
         ; creation and setup of agents
         setup-voters
   ; --- end create and setup voters
-
-
 
   ;
   reset-ticks
@@ -207,8 +202,6 @@ to go
   ask voter 2 [
     print incoming-queue
   ]
-
-
 
   ;----- End Agents to-go part ----------------------------------------
   ;
@@ -364,8 +357,6 @@ to perceive-environment
   ; if changed status, set new current state
   ; call proactive-behavior
 
-
-
   ; proactive behavior testing part:
   if flagNewYear [
     print "New Year!"
@@ -446,7 +437,7 @@ num-agents
 num-agents
 5
 700
-154.0
+700.0
 1
 1
 NIL
