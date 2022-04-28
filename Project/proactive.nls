@@ -32,9 +32,9 @@ end
 
 
 ; exists-belief
-to proactive-behavior ; 
+to proactive-behavior  
   if exist-beliefs-of-type "campaign-flag" [
-    set current_state [ -> working-for-campaign ]
+    set current_state [ -> working-for-campaign ] ;kanske läggas på intention stack
   ]
   
   run current_state
@@ -46,6 +46,11 @@ to working-for-campaign
   print "Working for campaign"
   
   ;Subtask 2: Skicka politiska meddelanden till sina vänner och deras vänner
+  let msg create-message "inform"
+  set msg add-content (list "pol-attitude" campaignPolAttitude) msg
+  set msg add-multiple-receivers friendsList msg
+  send msg ;Kanske läggas på intention stacken
+  
   
   ;Pratchaya kod??
   
