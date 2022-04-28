@@ -28,6 +28,7 @@ __includes [
     "setupvoters.nls"
     "proactive.nls"
     "polattitude.nls"
+    "campaign.nls"
   ;
   ;
 
