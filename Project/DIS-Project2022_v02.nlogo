@@ -247,7 +247,22 @@ to process-request-add-friend [content_type message]
 end
 
 to process-request-campaign-attitude [content_type message]
-  ; TODO: Week 17 Task 8.4
+  ; Week 17 Task 8.4
+  if content_type = "campaign_attitude" [
+    let xyz item 1 get-content message
+    add-intention (word "sum-heatmap" xyz) "true"
+
+    let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
+    let pol-attitude center-of-mass heatmap
+    let replyMsg create-message "Temp_message"
+    ifelse (neighbour-check xyz heatmap)
+      [set replyMsg create-message "agree"]
+      [set replyMsg create-message "cancel"]
+
+    set replyMsg add-receiver 2 replyMsg
+    set replyMsg add-content (list "campain_respons" (pol-attitude)) replyMsg
+    add-intention (word "send" replyMsg) "true"
+  ]
 end
 
 ; Agree

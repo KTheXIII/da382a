@@ -31,9 +31,9 @@ to campaign-inform
     let pol-attitude center-of-mass heatmap
     
     foreach voter-recipients [
-      let informMsg create-message "inform"
+      let informMsg create-message "request"
       set informMsg add-receiver 2 informMsg
-      set informMsg add-content (list "pol-attitude" (pol-attitude)) informMsg
+      set informMsg add-content (list "campaign-attitude" (pol-attitude)) informMsg
       print informMsg
       send informMsg
     ]
