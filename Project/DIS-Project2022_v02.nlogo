@@ -45,6 +45,7 @@ table
 
 ; ************ BREEDS OF TURTLES *****************
 breed [voters voter]  ;
+breed [broadcasters broadcaster]
 
 ; ********************end breed of turtles ********
 
@@ -52,6 +53,7 @@ breed [voters voter]  ;
 ; ************* GLOBAL VARIABLES *****************
 globals [
   time
+  flagNewDay ; true if it is a new day
   flagNewWeek ; true if it is a new week
   flagNewMonth ; true if it is a new month
   flagNewYear ; true if it is a new year
@@ -67,6 +69,7 @@ globals [
   numAgentRegion2
   numAgentRegion3
 
+  randomBroadcast
 ]
 
 ; ******************end global variables ***********
@@ -107,12 +110,15 @@ to setup
   clear-all
   ; set-up things
   ;  -- set up time
+  set flagNewDay false
   set flagNewWeek false
   set flagNewMonth false
   set flagNewYear false
 
   set attitude_rows 3
   set attitude_cols 5
+
+  create-broadcasters 1
 
   ; Create the regions
   setup-regions
@@ -147,6 +153,7 @@ to go
   set week floor (ticks / (tickNum * 7))
   set month floor (ticks / (tickNum * 30.437))
   set year floor (ticks / (tickNum * 365.25))
+  ifelse (day > old_day) [set flagNewDay true] [set flagNewDay false]
   ifelse (week > old_week) [set flagNewWeek true] [set flagNewWeek false]
   ifelse (month > old_month) [set flagNewMonth true] [set flagNewMonth false]
   ifelse (year > old_year) [set flagNewYear true] [set flagNewYear false]
@@ -154,6 +161,7 @@ to go
   set old_week week
   set old_month month
   set old_year year
+
 
   ; Sending political messages to random selection of agents
 
@@ -171,12 +179,12 @@ to go
 ;
  ; Ask agents to do something.
   ask voters [
-;    process-messages ; process messages in the message-queue.
-;    perceive-environment ; updates beliefs about the environment
+    ;process-messages ; process messages in the message-queue.
+    perceive-environment ; updates beliefs about the environment
 
     ; Execute all of the intentions on the intention-stack as reactive behaviors
-;    while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
-;    proactive-behavior ; finite state machine for the proactive behavior
+    ;while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
+    ;proactive-behavior ; finite state machine for the proactive behavior
 
   ]
 
@@ -187,24 +195,6 @@ to go
 
     ;send lput "[text [1 1 10]]" lput "content:" (lput (word "receiver:" 2) (list "inform" (word "sender:" who) ) )
     ;print  "string sent"
-  ask one-of voters [
-    ;let receiver ([who] of voters in-cone 10 90)
-    ;print receiver
-    let informMsg create-message "inform"
-    set informMsg add-receiver 2 informMsg
-    ;set informMsg add-receiver receiver informMsg
-    ;set informMsg add-multiple-receivers receiver informMsg
-    set informMsg add-content (list "text" (list 1 1 10)) informMsg
-    print informMsg
-    ;send informMsg
-
-    ; trying to put the message on the intention stack
-    add-intention "send" informMsg
-    execute-intentions
-  ]
-  ask voter 2 [
-    print incoming-queue
-  ]
 
 
 
@@ -214,10 +204,43 @@ to go
 
   ; show/hide things
 end
+
 ;************************end to go/starting part ***********
 
 
 ; ************** FUNCTION and REPORT PART **************
+to broadcasting
+  let n ((num-agents * 0.6) + (random(num-agents * 0.3)) - 1)
+  ask broadcasters [
+    let receiver n-of n ([who] of voters with [age > 17])
+    ;print receiver
+    let informMsg create-message "inform"
+    ;set informMsg add-receiver voters informMsg
+    ;set informMsg add-receiver receiver informMsg
+    set informMsg add-multiple-receivers receiver informMsg
+    set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
+
+    print informMsg
+    send informMsg
+
+    ; trying to put the message on the intention stack
+    ;add-intention "send" informMsg
+    ;execute-intentions
+  ]
+  ask voters [
+    process-messages
+  ]
+end
+
+to send-current-pol-att
+    ;print receiver
+    let informMsg create-message "inform"
+    set informMsg add-multiple-receivers friendsList informMsg
+    set informMsg add-content (list "pol_attitude" current_pol_attitude) informMsg
+
+    print informMsg
+    send informMsg
+end
 
 
 to process-messages
@@ -241,6 +264,7 @@ to process-messages
         let xyz item 1 get-content msg
         add-intention (word "sum-heatmap" xyz) "true"
         ;sum-heatmap (xyz)
+        print "love"
       ]
       [
       ifelse type-content = "removed-from-list"
@@ -320,16 +344,26 @@ to perceive-environment
 
 
   ; proactive behavior testing part:
+  if flagNewDay [
+    print "New Day!"
+    broadcasting
+
+  ]
+  if flagNewWeek [
+    print "New Week!"
+    send-current-pol-att
+
+  ]
+
+  if flagNewMonth [
+    print "New Month!"
+
+  ]
+
   if flagNewYear [
     print "New Year!"
 
-    ; Increase job wage, if status is adult and not employed.
-    if flagEmployed [
-      set old_wage wage
-      let yearly_increase random-float 0.08
-      set yearly_increase yearly_increase + 1
-      set wage wage * yearly_increase
-    ]
+
   ]
   ;--end proactive behavior testing part ---
 end
@@ -347,8 +381,6 @@ to remove-friend [id]
 print "remove-friend"
 ; Implemented by other group.
 end
-
-
 
 ;************** end function and report part **************
 @#$#@#$#@
@@ -373,8 +405,8 @@ GRAPHICS-WINDOW
 66
 0
 33
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -398,8 +430,8 @@ SLIDER
 num-agents
 num-agents
 5
-700
-154.0
+100
+10.0
 1
 1
 NIL
@@ -440,12 +472,12 @@ NIL
 1
 
 INPUTBOX
-142
-520
-192
-580
+143
+505
+202
+581
 tickNum
-1.0
+2.0
 1
 0
 Number

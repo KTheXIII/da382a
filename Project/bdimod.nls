@@ -91,14 +91,11 @@ to execute-intentions
   let myInt get-intention
   if show-intentions [set label myInt] ;; Just for debugging. 
   if show-intentions [show myInt] ;; Just for debugging. 
-  let cmd intention-name myInt
-  ifelse member? cmd "send sum-heatmap xxx yyy"
+  ifelse (intention-name myInt)= "send" 
    [
-    let val intention-done myInt
-    if cmd = "send" [send val]
-    if cmd = "sum-heatmap" [sum-heatmap val]
-    ;if cmd = "xxx" [xxx val]
-    ;if cmd = "yyy" [yyy val]
+    let msg intention-done myInt
+    (send msg)
+    print "inside execute intentions send msg"
     remove-intention myInt
   ]
   [
@@ -106,7 +103,7 @@ to execute-intentions
     if runresult intention-done myInt [remove-intention myInt]
   ]
   ;if show-intentions [set label intentions] ;; Just for debugging. 
-end 
+end
 
 ;;;; Intentions Structure Access Functions
 ;; returns the current intention of the agent
