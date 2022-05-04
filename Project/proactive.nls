@@ -4,6 +4,7 @@
 
 ; 2022-04-14 Branch of "Chapter 5," week 15, TASK 5 with implementing the state machine and proactive parts. (Mouad, Reem, Petter)
 ; 2022-04-14 This code is included in the project.
+; 2022-04-28 "Chapter 8" TASK 3 proactive behaviour in political campaign, added the state working-for-campaign and also updated proactive-behavior (Ademir Zjajo, Christian H, Isac Pettersson, Johan Skäremo, Rasmus Mathiasson)
 ;
 ;---------------------------------------------------
 
@@ -40,19 +41,20 @@ to proactive-behavior
   run current_state
 end
 
-; Definition of the states
+; Definition of the states 
 
+; -- State for the working agents --
 to working-for-campaign
   print "Working for campaign"
   
-  ;Subtask 2: Skicka politiska meddelanden till sina vänner och deras vänner
+  ;Subtask 2: Send political message to friends
   let msg create-message "inform"
   set msg add-content (list "pol-attitude" campaignPolAttitude) msg
   set msg add-multiple-receivers friendsList msg
-  send msg ;Kanske läggas på intention stacken
+  send msg ; Intention stack maybe?
   
   
-  ;Pratchaya kod??
+  ;Task 4 maybe?
   
 end
 ; -- Children  --
