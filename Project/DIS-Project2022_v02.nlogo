@@ -625,24 +625,6 @@ false
 PENS
 "default" 1.0 1 -16777216 true "histogram [current_pol_attitude] of voters" "histogram [current_pol_attitude] of voters"
 
-PLOT
-5
-281
-205
-431
-alternative Political attitude
-political spectrum
-Nr voters
-0.0
-10.0
-0.0
-10.0
-true
-false
-"set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 3\nset-histogram-num-bars 5" ""
-PENS
-"default" 1.0 1 -2674135 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "histogram [array:item current_pol_array 0] of voters"
-
 @#$#@#$#@
 ## WHAT IS IT?
 
