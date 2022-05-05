@@ -74,7 +74,14 @@ to matrix_insert [matrix x y value]
   array:set matrix index (value)
 end
 
-
+ ; Function for increasing the current value in the message-plane when message is received.
+to process_message [x y]
+  let message-plane (item 1 (item 0 beliefs-of-type "message-plane"))
+  let index y * attitude_rows + x
+  let new-value array:item message-plane index
+  set new-value + 1  
+  array:set messagePlane index (newValue) 
+end
 
 ; TODO
 ; LINNEA WRITES THE FORMULA THAT TRIGGERS EVERY MONTH
