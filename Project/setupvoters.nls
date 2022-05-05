@@ -92,6 +92,10 @@ to setup-voters
     set incoming-queue []
     set age -1 ; used to simplify setup-agentAge
     set levelOfEducation -1 ; used to simplify setup-educationLevel
+    set friendsList []
+    set possibleCandidates []
+    set campaignCandidates []
+    set politicalCampaignManager false
     
     ;temporary test-code for proactive behavior
     ; Initial status and state
@@ -109,7 +113,6 @@ to setup-voters
   setup-familyList
   setup-heatmap
 end
-
 
 
 

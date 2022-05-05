@@ -99,8 +99,8 @@ to setup-heatmap
    ; testing alternative to heatmap
    ask voters [
     let lpol strongest_pol_attitude
-    print (word "voter:" who ": strongest pol_attitude: " lpol)
-    print (word ": in parts-first item: " (item 0 lpol) " 2nd item:conv= " (item 1 lpol))
+    ;print (word "voter:" who ": strongest pol_attitude: " lpol)
+    ;print (word ": in parts-first item: " (item 0 lpol) " 2nd item:conv= " (item 1 lpol))
    ]  
   ; end testing alternative to heatmap
   
@@ -148,7 +148,7 @@ end
 ; Sum the heat (x, y, z) conviction on our heatmap.
 ; This applies to the current agent.
 to sum-heatmap [heat]
-print "running heatmap"
+;print "running heatmap"
 print who
   let row attitude_rows
   let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
