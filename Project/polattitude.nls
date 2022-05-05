@@ -45,8 +45,8 @@ to setup-pol-attitude
 
   let max_heat 10
 
-  let conviction-plane array:from-list n-values (cols * rows) [1]
-  let message-plane array:from-list n-values (cols * rows) [0]
+  let conviction-plane matrix-create cols rows 1
+  let message-plane matrix-create cols rows 0
 
   let polVal  random(100)
   let polIndex 0
