@@ -246,15 +246,15 @@ to process-request-campaign-attitude [content_type message]
     add-intention (word "sum-heatmap" xyz) "true"
 
     let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
-    let pol-attitude center-of-mass heatmap
-    let replyMsg create-message "Temp_message"
-    ifelse (neighbour-check xyz heatmap)
-      [set replyMsg create-message "agree"]
-      [set replyMsg create-message "cancel"]
+;;    let pol-attitude center-of-mass heatmap
+;    let replyMsg create-message "Temp_message"
+;    ifelse (neighbour-check xyz heatmap)
+;      [set replyMsg create-message "agree"]
+;      [set replyMsg create-message "cancel"]
 
-    set replyMsg add-receiver 2 replyMsg
-    set replyMsg add-content (list "campain_respons" (pol-attitude)) replyMsg
-    add-intention (word "send" replyMsg) "true"
+;    set replyMsg add-receiver 2 replyMsg
+;    set replyMsg add-content (list "campain_respons" (pol-attitude)) replyMsg
+;    add-intention (word "send" replyMsg) "true"
   ]
 end
 

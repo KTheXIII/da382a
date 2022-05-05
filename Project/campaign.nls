@@ -24,12 +24,12 @@ to campaign-inform
     let radius (item 1 (item 0 beliefs-of-type "campaign-radius"))
     let voter-recipients other voters in-radius radius
     let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
-    let pol-attitude center-of-mass heatmap
-    
+;    let pol-attitude center-of-mass heatmap
+
     foreach voter-recipients [
       let informMsg create-message "request"
       set informMsg add-receiver 2 informMsg
-      set informMsg add-content (list "campaign-attitude" (pol-attitude)) informMsg
+;      set informMsg add-content (list "campaign-attitude" (pol-attitude)) informMsg
       print informMsg
       send informMsg
     ]

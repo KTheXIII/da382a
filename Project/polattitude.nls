@@ -49,8 +49,8 @@ to setup-pol-attitude
 
   let max_heat 10
 
-  let conviction-plane matrix-create cols rows 1
-  let message-plane matrix-create cols rows 0
+  let conviction-plane matrix_create rows cols 1
+  let message-plane matrix_create rows cols 0
 
   let polVal  random(100)
   let polIndex 0
@@ -65,9 +65,7 @@ to setup-pol-attitude
   
   add-belief create-belief "message-plane" message-plane
   add-belief create-belief "conviction-plane" conviction-plane
-  
-  let com center-of-mass conviction-plane
-  set current_pol_attitude item 0 com 
+  set current_pol_attitude polIndex
 end
 
 
@@ -111,17 +109,16 @@ to update-pol-attitude
     
     set x (current_max_w_index mod attitude_cols)
     set y floor(current_max_w_index / attitude_cols)
-    current_pol_attitude = list x y
+;    current_pol_attitude = list x y
   ]
 end
 
 ; Function for increasing the current value in the message-plane when message is received.
 to process_message [x y]
   let message-plane (item 1 (item 0 beliefs-of-type "message-plane"))
-  let index y * attitude_rows + x
-  let new-value array:item message-plane index
-  set new-value + 1  
-  array:set messagePlane index (newValue) 
+  let new-value matrix_query message-plane x y
+  set new-value (new-value + 1)
+  matrix_insert message-plane x y new-value
 end
 
 ;------------------------------------------------------------------
@@ -136,14 +133,13 @@ to matrix_insert [matrix x y value]
 end
 
 ; Reports a matrix with size rows * cols 
-to-report matrix-create[rows column value]
-  let matrix array:from-list n-values (cols * rows) [value]
+to-report matrix_create[rows columns value]
+  let matrix array:from-list n-values (rows * columns) [value]
   report matrix
 end
 
-to-report matrix-query [matrix x y]
+to-report matrix_query [matrix x y]
   let index y * attitude_cols + x
   let value array:item matrix index
-  
   report value
 end
