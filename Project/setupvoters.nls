@@ -108,6 +108,8 @@ to setup-voters
   setup-monthlyWage
   setup-familyList
   setup-heatmap
+  ; gives each voter a political attitude
+  ask voters[setup-pol-attitude]
 end
 
 
