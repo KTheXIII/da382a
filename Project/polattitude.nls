@@ -64,11 +64,11 @@ end
 ; Generate the attitude plane heatmap and set it in the beliefs hashmap.
 to setup-pol-attitude
   setup-init-attitude-value
-  ; MAKE THE MESSAGE MATRIX
+  ; TODO - MAKE THE MESSAGE MATRIX
 end
 
 
-; REWRITE TO SUMMING OF MESSAGES
+; TODO - REWRITE TO SUMMING OF MESSAGES
 ; Sum the heat (x, y, z) conviction on our heatmap.
 ; This applies to the current agent.
 to sum-heatmap [heat]
@@ -83,6 +83,7 @@ to sum-heatmap [heat]
   array:set heatmap index (current_z + hz)
 end
 
+; TODO
 ; LINNEA WRITES THE FORMULA THAT TRIGGERS EVERY MONTH
 ; THIS WILL ALSO UPDATE current_pol_attitude
 to uppdate-pol-attitude
