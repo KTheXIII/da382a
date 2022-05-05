@@ -21,13 +21,17 @@
 ;            Author: PK
 ; 2022-04-?? setup-heatmap added by ???
 ; 2022-04-27 added an alternative to heatmap to test, included create-pol_plane, set_pol_attitude, strongest_pol_attitude, (gks)
-; 2022-05-05 Remove alternative heatmap. Added utility function matrix create EL.
+; 2022-05-05 Remove alternative heatmap. Added utility function matrix create EL. Added Utility function matrix-insert Isac Pettersson(IP), 
+;            Added Utility function matrix-query IP, rewrite setup-pol-attitude to function with the new message-matrix and conviction-matrix EL,
+;            Function for updating the new message-matrix and conviction-matrix according to class discussion update-pol-attitude LM,
+;       
 ;
 ;
 ;---------------------------------------------------
 
 
 ; Generate the attitude plane heatmap and set it in the beliefs hashmap.
+; The function needs to be called inside a ask voter [] block
 to setup-pol-attitude
   let rows attitude_rows
   let cols attitude_cols
