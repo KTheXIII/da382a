@@ -43,7 +43,7 @@ to setup-init-attitude-value
   ask voters [
     let max_heat 10
 
-    let heatmap array:from-list n-values (cols * rows) [0]
+    let heatmap array:from-list n-values (cols * rows) [1]
 
     let polVal  random(100)
     let polIndex 0
@@ -53,8 +53,8 @@ to setup-init-attitude-value
     if tier2 < polVal and polVal < tier3 [set polIndex 2]
     if tier3 < polVal and polVal < tier4 [set polIndex 3]
     if tier4 < polVal and polVal < tier5 [set polIndex 4]
-
-    array:set heatmap (1 * cols + polIndex) 1
+    
+    array:set heatmap (1 * cols + polIndex) 2
     add-belief create-belief "attitude-plane" heatmap
     let com center-of-mass heatmap
     set current_pol_attitude item 0 com 
