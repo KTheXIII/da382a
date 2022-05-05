@@ -62,48 +62,13 @@ to setup-init-attitude-value
 end
 
 ; Generate the attitude plane heatmap and set it in the beliefs hashmap.
-to setup-heatmap
+to setup-pol-attitude
   setup-init-attitude-value
+  ; MAKE THE MESSAGE MATRIX
 end
 
-; Get the attitude plane current coordinate and the calculated
-; conviction based on the attitude plane's heatmap.
-;
-; return [x y z] where (x, y) is the position and the z is the conviction value.
-to-report center-of-mass [heatmap]
-  let rows attitude_rows
-  let cols attitude_cols
 
-  ;let sum_mass 0
-  let sum_mass 0.0
-  ;let sum_particles list 0 0
-  let sum_particles list 0.0 0.0
-  foreach (n-values rows [i -> i]) [
-    y -> foreach (n-values cols [j -> j]) [
-      x ->
-      ;let index y * rows + x
-      let index y * cols + x
-      let m array:item heatmap index
-
-      let mx m * x
-      let my m * y
-
-      let sx item 0 sum_particles
-      let sy item 1 sum_particles
-      set sum_particles list (mx + sx) (my + sy)
-      set sum_mass (sum_mass + m)
-    ]
-  ]
-  if sum_mass = 0 [set sum_mass 1]
-  ;let x round (item 0 sum_particles / sum_mass)
-  ;let y round (item 1 sum_particles / sum_mass)
-  ;let z array:item heatmap (y * rows + x)
-  let x floor (item 0 sum_particles / sum_mass)
-  let y floor (item 1 sum_particles / sum_mass)
-  let z array:item heatmap (y * cols + x)
-  report (list x y z)
-end
-
+; REWRITE TO SUMMING OF MESSAGES
 ; Sum the heat (x, y, z) conviction on our heatmap.
 ; This applies to the current agent.
 to sum-heatmap [heat]
@@ -118,26 +83,9 @@ to sum-heatmap [heat]
   array:set heatmap index (current_z + hz)
 end
 
-; Check if the incoming attitude message is within a range
-; of our current position in the attitude plane
-;
-; true:  message is valid for attitude-plane summation
-; false: message not satisfy the attitude-plane summation
-to-report neighbour-check [message heatmap]
-  let attitude_plane center-of-mass heatmap
-  let apx item 0 attitude_plane
-  let apy item 1 attitude_plane
-
-  let mx item 0 message
-  let my item 1 message
-
-;  ; Euclidean distance
-;  let dist_euclidean (apx - mx) * (apx - mx) + (apy - my) * (apy - my)
-;  report dist_euclidean <= 1
-
-  ; Manhattan distance
-  let dist_x abs(apx - mx)
-  let dist_y abs(apy - my)
-
-  report dist_x <= 1 xor dist_y <= 1
+; LINNEA WRITES THE FORMULA THAT TRIGGERS EVERY MONTH
+; THIS WILL ALSO UPDATE current_pol_attitude
+to uppdate-pol-attitude
+  
 end
+
