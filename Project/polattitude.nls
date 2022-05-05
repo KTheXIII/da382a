@@ -67,27 +67,17 @@ to setup-pol-attitude
 end
 
 
-; Utility function for inserting value into matrix at selected x, y coordinates.
-to matrix_insert [matrix x y value]  
-  let index y * attitude_rows + x
-  array:set matrix index (value)
-end
-
- ; Function for increasing the current value in the message-plane when message is received.
-to process_message [x y]
-  let message-plane (item 1 (item 0 beliefs-of-type "message-plane"))
-  let index y * attitude_rows + x
-  let new-value array:item message-plane index
-  set new-value + 1  
-  array:set messagePlane index (newValue) 
-end
-
-; TODO
-; LINNEA WRITES THE FORMULA THAT TRIGGERS EVERY MONTH
+; This should trigger each month and calculates what party you likes now
+; as well as updating your conviction plane
 ; THIS WILL ALSO UPDATE current_pol_attitude
 to update-pol-attitude
   let attitudes (item 1 (item 0 beliefs-of-type "attitude-plane"))
   let messages (item 1 (item 0 beliefs-of-type "message-plane"))
+  
+  let x (item 0 current_pol_attitude)
+  let y (item 1 current_pol_attitude)
+  let current_pol_index y * attitude_cols + x
+  
   let current_max_w 0
   let current_max_w_index 0
   
@@ -112,13 +102,33 @@ to update-pol-attitude
   
   array:set attitudes current_max_w_index ((array:item attitudes current_max_w_index) + levelOfEducation)
   
-  if (current_max_w_index != current_pol_attitude) [
-    array:set attitudes current_max_w_index ((array:item attitudes current_max_w_index) + array:item attitudes current_pol_attitude)
-    current_pol_attitude = current_max_w_index
+  if (current_max_w_index != current_pol_index) [
+    array:set attitudes current_max_w_index ((array:item attitudes current_max_w_index) + array:item attitudes current_pol_index)
+    
+    set x (current_max_w_index mod attitude_cols)
+    set y floor(current_max_w_index / attitude_cols)
+    current_pol_attitude = list x y
   ]
-  
-  
-  
+end
+
+; Function for increasing the current value in the message-plane when message is received.
+to process_message [x y]
+  let message-plane (item 1 (item 0 beliefs-of-type "message-plane"))
+  let index y * attitude_rows + x
+  let new-value array:item message-plane index
+  set new-value + 1  
+  array:set messagePlane index (newValue) 
+end
+
+;------------------------------------------------------------------
+; UTILLITY FUNCTION FOR HANDLING MATRICES PRETEND THESE ARE PRIVATE
+;------------------------------------------------------------------
+ 
+
+; Utility function for inserting value into matrix at selected x, y coordinates.
+to matrix_insert [matrix x y value]  
+  let index y * attitude_rows + x
+  array:set matrix index (value)
 end
 
 ; Reports a matrix with size rows * cols 
@@ -126,6 +136,7 @@ to-report matrix-create[rows column value]
   let matrix array:from-list n-values (cols * rows) [value]
   report matrix
 end
+
 to-report matrix-query [matrix x y]
   let index y * attitude_cols + x
   let value array:item matrix index
