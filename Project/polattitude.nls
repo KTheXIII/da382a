@@ -23,6 +23,7 @@
 ; 2022-04-27 added an alternative to heatmap to test, included create-pol_plane, set_pol_attitude, strongest_pol_attitude, (gks)
 ; 2022-05-05 Remove alternative heatmap. Added utility function matrix create EL.
 ;
+;
 ;---------------------------------------------------
 
 
@@ -84,7 +85,39 @@ end
 ; TODO
 ; LINNEA WRITES THE FORMULA THAT TRIGGERS EVERY MONTH
 ; THIS WILL ALSO UPDATE current_pol_attitude
-to uppdate-pol-attitude
+to update-pol-attitude
+  let attitudes (item 1 (item 0 beliefs-of-type "attitude-plane"))
+  let messages (item 1 (item 0 beliefs-of-type "message-plane"))
+  let current_max_w 0
+  let current_max_w_index 0
+  
+  ; calculate a sum of message * attitude
+  let matrix_sum 0
+  foreach (n-values (attitude_cols * attitude_rows) [i -> i])[
+    index -> 
+       set matrix_sum (matrix_sum + (array:item attitudes index) * (array:item messages index))
+  ]
+  
+  ; calculate the bigges W_max
+  let current_W 0
+   foreach (n-values (attitude_cols * attitude_rows) [i -> i])[
+    index -> 
+       set current_W (((array:item attitudes index) * (array:item messages index)) / matrix_sum)
+        array:set messages index 0
+       if (current_W > current_max_w) [
+          set current_max_w current_W
+          set current_max_w_index index
+    ]
+  ]
+  
+  array:set attitudes current_max_w_index ((array:item attitudes current_max_w_index) + levelOfEducation)
+  
+  if (current_max_w_index != current_pol_attitude) [
+    array:set attitudes current_max_w_index ((array:item attitudes current_max_w_index) + array:item attitudes current_pol_attitude)
+    current_pol_attitude = current_max_w_index
+  ]
+  
+  
   
 end
 
@@ -92,4 +125,10 @@ end
 to-report matrix-create[rows column value]
   let matrix array:from-list n-values (cols * rows) [value]
   report matrix
+end
+to-report matrix-query [matrix x y]
+  let index y * attitude_cols + x
+  let value array:item matrix index
+  
+  report value
 end
