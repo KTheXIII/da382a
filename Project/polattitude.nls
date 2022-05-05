@@ -90,3 +90,8 @@ to uppdate-pol-attitude
   
 end
 
+; Reports a matrix with size rows * cols 
+to-report matrix-create[rows, column, value]
+  let matrix array:from-list n-values (cols * rows) [value]
+  report matrix
+end
