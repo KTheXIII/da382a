@@ -6,14 +6,19 @@ _Written by Marcus Linné, will be updated further as soon as I have more "finali
 ### **`setup-poll-attitude`**
 Creates the matrix for each attitude plane. This happens whenever a voter is born/created.
 
-Sets up an attitude plane "heatmap" which is an 3*5 matrix. When doing this, it creates 2 beliefs called `conviction-plane` and `message-plane`.
+Sets up two matrices, message-matrix and conviction-matrix. 
 
+`message-matrix` is used to store the amount of incoming messages for a political position.
+
+`conviction-matrix` is used to store the agents political conviction, which is a value that indicates 
+how strongly the agent believes in a political position.
 
 ### **`update-poll-attitude`**
 **Explaination:**
 TODO, Far from finished documentation.
     
-This method is used to update the attitude plane each month for the agent using "attitude-plane" and messages handled in the "message-plane" 
+This method is used to update the `conviction-plane` each month for the agent using `conviction-plane` and messages 
+handled in the `message-plane`
 
 
 ### **`process-messages(x, y)`**
@@ -25,11 +30,13 @@ This method is used to update the attitude plane each month for the agent using 
 
 This method takes the `x` and `y` values from the attitude plane that is included in the messages that are proecessed.
 
+Adds a value on the message-matrix on the position x,y
 
-## **Secondary methods**
 
-### **`matrix-insert(x, y)`**
-TODO
+## **Utility functions**
+
+### **`matrix-insert(x, y, value)`**
+Inserts a value in a mtrix on coordinate x,y 
 
 
 ### **`matrix-create(rows, column, value)`**
@@ -40,3 +47,5 @@ This method returns/reports an matrix with a size based on `rows`, `column` that
 
 ### **`matrix-query(matrix, x, y)`**
 **Explaination:**
+
+Utility function  to get the value of a coordinate in a matrix
