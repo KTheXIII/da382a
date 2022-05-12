@@ -34,7 +34,10 @@ to send [msg]
   foreach recipients [i ->
    set recv turtle (read-from-string i)
    if recv != nobody [without-interruption [ask recv [receive msg]]] ;; read-from-string is required to convert the string to number
+    ;Task 11.9
+    if show_lines[
    if (recv != self) [ create-link-with recv ]
+  ]
   ]
 end
 

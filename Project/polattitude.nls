@@ -113,6 +113,7 @@ to update-pol-attitude
     set x (current_max_w_index mod attitude_cols)
     set y floor(current_max_w_index / attitude_cols)
     set current_pol_attitude list x y
+    ;Task 11.10
     set color red
     send-current-pol-att
   ]

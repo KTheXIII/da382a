@@ -25,9 +25,11 @@
 ; 2022-05-12 Integrated the new pol-attitude functions with version 3. (Mouad, Petter, Reem)
 ; 2022-05-12 Did changes in "send msg" in communication.nls (Nour, Alban, Nezar, Gabriella, Drilon, Rasmus)
 ; 2022-05-12 Did changes in "update-pol-attitude" in polattitude.nls(Nour, Alban, Nezar, Gabriella, Drilon, Rasmus)
-; 2022-05-12 Fixed showing messages between agents with links in main code and communcation.nls(Nour, Gabriella, Rasmus)
-; 2022-05-12 Added the code of agents turning red if their political view changed after a month in the main code and polattitude.nls(Alban, Nezar, Drilon)
-; 2022-05-12 Added the code for agents to send their political attitude to their friends. Friendslist is still a test list(Alban, Nezar, Gabriella, Drilon, Nour)
+; 2022-05-12 Fixed showing messages between agents with links in main code and communcation.nls(11.9)(Nour, Gabriella, Rasmus)
+; 2022-05-12 Added the code of agents turning red if their political view changed after a month in the main code and polattitude.nls(8.1, 11.10)(Alban, Nezar, Drilon)
+; 2022-05-12 Added the code for agents to send their political attitude to their friends. Friendslist is still a test list(8.1)(Alban, Nezar, Gabriella, Drilon, Nour)
+; 2022-05-12 Added sending messages and updating political attitude on the intention stack(8.1)(Nour, Alban, Nezar, Gabriella, Drilon)
+; 2022-05-12 Added switch to show lines of messages being sent(Alban Islami)
 
 ; ************ INCLUDED FILES *****************
 __includes [
@@ -236,13 +238,14 @@ let receiver n-of n receivers
     send informMsg
   ]
 end
-
+;Task 8.1
 to send-current-pol-att
     let informMsg create-message "inform"
     set informMsg add-multiple-receivers friendsList informMsg
     set informMsg add-content (list "pol_attitude" current_pol_attitude) informMsg
     print informMsg
-    send informMsg
+    add-intention "send" informMsg
+    execute-intentions
 end
 
 to update-date
@@ -419,7 +422,7 @@ to perceive-environment
   if flagNewWeek [
     ;send-current-pol-att to friends
     send-current-pol-att
-    update-pol-attitude
+   ; update-pol-attitude
 
   if politicalCampaignManager = true [
   if possibleCandidates != []
@@ -445,9 +448,10 @@ to perceive-environment
   ]
   ]
   ]
-
+  ;Task 8.1
   if flagNewMonth [
-    update-pol-attitude
+    add-intention "update-pol-attitude" "true"
+    execute-intentions
   ]
 
   if flagNewYear [	
@@ -751,6 +755,17 @@ day
 17
 1
 11
+
+SWITCH
+6
+584
+122
+617
+show_lines
+show_lines
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
