@@ -108,6 +108,7 @@ to update-pol-attitude
   array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + levelOfEducation)
   
   if (current_max_w_index != current_pol_index) [
+    ; current oplitical attitude changed
     array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + array:item conviction-plane current_pol_index)
     
     set x (current_max_w_index mod attitude_cols)
@@ -153,6 +154,7 @@ to update_ranking
     ; move to next collumn
     set i (i + 1)
   ]
+  show party-conviction
 
   ; Find biggest 3 values and their indexes
   ; Loop 3 times
@@ -161,7 +163,7 @@ to update_ranking
     set j 0
     set current-biggest 0
     ; Loop through the party-conviction list
-    while [j < 3][
+    while [j < 5][
       ; find the index for the biggest value
       if current-biggest < item j party-conviction [
         set current-biggest item j party-conviction
@@ -176,6 +178,7 @@ to update_ranking
 
     set i (i + 1)
   ]
+  show current_pol_ranking
 end
 
 ;------------------------------------------------------------------
