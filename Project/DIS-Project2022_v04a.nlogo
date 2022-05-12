@@ -755,6 +755,23 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "histogram [resultlist]"
 
+BUTTON
+67
+72
+141
+105
+Election
+calculate-result
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
