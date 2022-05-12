@@ -115,7 +115,7 @@ to update-pol-attitude
   ]
    update-belief create-belief "message-plane" message-plane
    update-belief create-belief "conviction-plane" conviction-plane
-
+   
    update_ranking
 end
 

@@ -58,6 +58,33 @@ to working-for-campaign
   
 end
 
+; -- For process messages --
+to call-for-campaign-friends
+  set politicalCampaignManager true
+  let cfpMsg create-message "cfp"
+  set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
+  set cfpMsg add-multiple-receivers friendsList cfpMsg
+  send cfpMsg
+end
+
+to handle-cfp-campaign [managerid pol_attitude]
+ ifelse random 2 = 0
+ [
+  ; Accept
+  let cfpMsg create-message "propose"
+  set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
+  set cfpMsg add-receiver managerid cfpMsg
+  send cfpMsg
+ ]
+ [
+  ; Decline
+  let cfpMsg create-message "refuse"
+  set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
+  set cfpMsg add-receiver managerid cfpMsg
+  send cfpMsg
+ ]
+end
+
 ; -- Children  --
 to schooling
   print "Schooling state"
