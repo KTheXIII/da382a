@@ -96,6 +96,7 @@ to setup-voters
     set possibleCandidates []
     set campaignCandidates []
     set politicalCampaignManager false
+    setup-pol-attitude
     
     ;temporary test-code for proactive behavior
     ; Initial status and state
@@ -111,9 +112,7 @@ to setup-voters
   setup-educationLevel
   setup-monthlyWage
   setup-familyList
-;  setup-heatmap
-  ; gives each voter a political attitude
-  ask voters[setup-pol-attitude]
+  
 end
 
 
