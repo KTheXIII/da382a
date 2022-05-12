@@ -475,34 +475,49 @@ print "remove-friend"
 end
 
 to electionDay
+
   let party0 0
   let party1 0
   let party2 0
   let party3 0
   let party4 0
+  let parties (list party0 party1 party2 party3 party4)
 
   let electionVoters floor (0.7 * num-agents)
 
   ask n-of electionVoters voters[
     if (age >= 18) [
-      (ifelse current_pol_attitude = 0 [
+      (ifelse (item 0 current_pol_attitude = 0) [
         set party0 party0 + 1
       ]
-     current_pol_attitude = 1 [
+     item 0 current_pol_attitude = 1 [
        set party1 party1 + 1
       ]
-     current_pol_attitude = 2 [
+     item 0 current_pol_attitude = 2 [
        set party2 party2 + 1
       ]
-     current_pol_attitude = 3 [
+     item 0 current_pol_attitude = 3 [
        set party3 party3 + 1
       ]
-     current_pol_attitude = 4
+     item 0 current_pol_attitude = 4
      [
        set party4 party4 + 1
       ])
     ]
+
   ]
+  ;set parties [party0 party1 party2 party3 party4]
+ ; let parties max [party0 party1 party2 party3 party4]
+  show max (list party0 party1 party2 party3 party4)
+  if max (list party0 party1 party2 party3 party4) = party2
+  [
+    print "hej"
+  ]
+  print word "party0: " party0
+  print word "party1: " party1
+  print word "party2: " party2
+  print word "party3: " party3
+  print word "party4: " party4
 end
 
 
