@@ -1,0 +1,41 @@
+; File with functionality of the campaign procedure
+;
+; 2022-04-28 Week 17 Task 8.4-2: valhjälpare skickar meddelanden till agenter i det tilldelade området
+;            Author: Eric Lundin (EL), Linnéa Mörk (LM)
+
+
+
+; w17t04-1. Kampajnmanagern skickar xmin, xmax,ymin,ymax koordinater 
+;           till varje valhjälpare. Alternativ: skickar en punkt och en radius.
+to campaign-distribute
+  ask voters with [true] [
+    ; TODO: Send message to all the campaign member
+    ;       The message include: campaign location
+    ;                            radius of the spread
+  ]
+end
+
+; informs the voters in area of the campaigner 
+to campaign-inform
+  ; w17t04-3. när valhjälpare skickar ut politiska meddelanden ska 
+  ;           de få tillbaka current_pol_attitude från mottagarna.
+  ;           Den information kan de utvärdera för att få tre nyckelvärden
+  ask voters with [exists-belief "campaign-flag"][
+    let radius (item 1 (item 0 beliefs-of-type "campaign-radius"))
+    let voter-recipients other voters in-radius radius
+    let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
+    let pol-attitude center-of-mass heatmap
+    
+    foreach voter-recipients [
+      let informMsg create-message "request"
+      set informMsg add-receiver 2 informMsg
+      set informMsg add-content (list "campaign-attitude" (pol-attitude)) informMsg
+      print informMsg
+      send informMsg
+    ]
+  ]
+end
+
+; TODO: Campaign helper agent need to send back the amount
+;       of 'accept' and 'cancels' to manager.
+;       if accept then send back [num_cancels num_neighbors num_accepts]

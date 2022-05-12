@@ -20,25 +20,25 @@
 ; 2022-04-21 Fixed a bug in sum-heatmap.
 ; 2022-04-21 Extended process_messages and added inform political attitude, friend-request, and remove-friend are added (Marcus, Linnéa, Mouad, Reem, Petter)
 ; 2022-04-28 Added a contract net for organizing political campaign (Mouad, Petter, Reem, Arian, Anas Mohammed, Christian)
+; 2022-04-28 Fix indentation and bracket hell in process-message routine
+;            Author: PK
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
-    "bdimod.nls" ; modified version that allows certain intentions to pass values along
-    "communication.nls"
-    "setupvoters.nls"
-    "proactive.nls"
-    "polattitude.nls"
-  ;
-  ;
-
+  "bdimod.nls" ; modified version that allows certain intentions to pass values along
+  "communication.nls"
+  "setupvoters.nls"
+  "proactive.nls"
+  "polattitude.nls"
+  "campaign.nls"
 ]
 ; ********************end included files ********
 
 ; ************ EXTENSIONS *****************
 extensions [
-; vid ; used for recording of the simulation
-array
-table
+  ; vid ; used for recording of the simulation
+  array
+  table
 ]
 ; ********************end extensions ********
 
@@ -94,16 +94,16 @@ voters-own [
   wage old_wage
   region
   current_pol_attitude ; holds x and y values of attitude plane
-  current_pol_array ; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
-  pol_tbl ; table for the political plane with key "x y"
-  conv_tbl ; table for the political conviction, with same key "x y"
+  current_pol_array    ; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
+  pol_tbl              ; table for the political plane with key "x y"
+  conv_tbl             ; table for the political conviction, with same key "x y"
 
   ; Campaign variables
-  politicalCampaignManager ; True or false if the agent is a manager for a political campaign.
+  politicalCampaignManager   ; True or false if the agent is a manager for a political campaign.
   politicalCampaignManagerId ; The managers ID
-  campaignPolAttitude ; The political attitude for the campaign.
-  campaignCandidates ; List of candidates that are participating in the campaign
-  possibleCandidates ; Temporary list of agents that are proposing to be part of the campaign.
+  campaignPolAttitude        ; The political attitude for the campaign.
+  campaignCandidates         ; List of candidates that are participating in the campaign
+  possibleCandidates         ; Temporary list of agents that are proposing to be part of the campaign.
 ]
 ; *********************end agent-specific variables *************
 
@@ -135,8 +135,6 @@ to setup
         ; creation and setup of agents
         setup-voters
   ; --- end create and setup voters
-
-
 
   ;
   reset-ticks
@@ -224,22 +222,6 @@ to go
  ;   execute-intentions
  ; ]
 
-  ;ask voter 2 [
-  ;  print incoming-queue
-  ;]
-
-  ask voter 1 [
-   ; For testing cfp
-
-   ; send cfp to friendslist
-    ;set friendsList (list 5 6 7 8 9 10 11) ; <-- test
-    ;call-for-campaign-friends
-    ;print "Pol:"
-    ;print strongest_pol_attitude
-    ;
-  ]
-
-
   ;----- End Agents to-go part ----------------------------------------
   ;
   tick
@@ -312,6 +294,100 @@ end
 
 
 
+; Inform
+to process-pol-attitude [content_type message]
+  if content_type = "pol_attitude" [
+    let xyz item 1 get-content message
+    add-intention (word "sum-heatmap" xyz) "true"
+  ]
+end
+
+to process-remove-from-list [content_type message]
+  if content_type = "remove-from-list" [
+    let friend-id get-sender message
+    add-intention (word "remove-friend " friend-id ) "true"
+  ]
+end
+
+; Request
+to process-request-add-friend [content_type message]
+  if content_type = "friend-request" [
+    let friend-id get-sender message
+    let xyz item 1 get-content message
+    add-intention (word "add-friend " friend-id " " xyz) "true"
+  ]
+end
+
+to process-request-campaign-attitude [content_type message]
+  ; Week 17 Task 8.4
+  if content_type = "campaign_attitude" [
+    let xyz item 1 get-content message
+    add-intention (word "sum-heatmap" xyz) "true"
+
+    let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
+    let pol-attitude center-of-mass heatmap
+    let replyMsg create-message "Temp_message"
+    ifelse (neighbour-check xyz heatmap)
+      [set replyMsg create-message "agree"]
+      [set replyMsg create-message "cancel"]
+
+    set replyMsg add-receiver 2 replyMsg
+    set replyMsg add-content (list "campain_respons" (pol-attitude)) replyMsg
+    add-intention (word "send" replyMsg) "true"
+  ]
+end
+
+; Agree
+to process-agree-add-friend [content_type message]
+  if content_type = "friend-request" [
+    ; TODO: Accept friend request
+  ]
+end
+
+; Cancel
+to process-cancel-add-friend [content_type message]
+  if content_type = "friend-request" [
+    ; TODO: Cancel/Deny friend request
+  ]
+end
+
+; Performative routines
+to performative-inform [content_type message]
+  ; "inform" messages procedure
+  if get-performative message = "inform" [
+    ; "pol_attitude"
+    process-pol-attitude content_type message
+    ; "remove-from-list"
+    process-remove-from-list content_type message
+  ]
+end
+
+to performative-request [content_type message]
+  ; "request" messages
+  if get-performative message != "request" [
+    ; "friend-request"
+    process-request-add-friend content_type message
+    ; "campaign-attitude"
+    process-request-campaign-attitude content_type message
+  ]
+end
+
+to performative-agree [content_type message]
+  ; "agree" messages
+  if get-performative message != "agree" [
+    ; "friend-request"
+    process-agree-add-friend content_type message
+  ]
+end
+
+to performative-cancel [content_type message]
+    ; "cancel" messages
+  if get-performative message = "cancel" [
+    ; "friend-request"
+    process-cancel-add-friend content_type message
+  ]
+end
+
 to process-messages
 ; reads and interprets all the messages on the message-queue (might need a while-loop)
   ; -> updates beliefs and variables
@@ -321,119 +397,22 @@ to process-messages
   ; Logic for adding incoming conviction value into the our current agent
   ; conviction queue for later processing. This is required because the
   ; intention stack cannot store data.
+  while [get-message-no-remove != "no_message"] [
+    let msg get-message  ; pop the message stack
+    let content_type item 0 get-content msg
 
-  while [get-message-no-remove != "no_message"]
-  [
-    let msg get-message
-    ifelse get-performative msg = "inform"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "pol_attitude"
-      [
-        let xyz item 1 get-content msg
-        add-intention (word "sum-heatmap" xyz) "true"
+    ; Check and run the performative which determine what type of message it is.
+    ; This section of code will either return back the message which will be
+    ; used for later branches or return emtpy list to selectively run next block.
 
-        ;sum-heatmap (xyz)
-        print "love"
-      ]
-      [
-      ifelse type-content = "removed-from-list"
-      [
-        let friend-id get-sender msg
-        add-intention (word "remove-friend " friend-id ) "true"
-      ]
-      [
-      ; ... else another type-content
-      ]
-      ]
-    ][
-    ifelse get-performative msg = "request"
-    [
-     let type-content item 0 get-content msg
-     ifelse type-content = "friend-request"
-     [
-       let friend-id get-sender msg
-       let xyz item 1 get-content msg
-       add-intention (word "add-friend " friend-id " " xyz) "true"
-     ]
-     [
-     ; ... else another type-content
-     ]
-    ]
-    [
-    ifelse get-performative msg = "agree"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "friend-request"
-      [
-          ;"Agreed friend request"
-      ]
-      [
-        ; ... else another type-content
-      ]
-      ]
-    [
-    ifelse get-performative msg = "cancel"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "friend-request"
-      [
-      ; print "Cancelled friend request"
-      ]
-      [
-      ; .. else another type-content
-      ]
-    ]
-   [
-    ifelse get-performative msg = "cfp"
-    [
-    let type-content item 0 get-content msg
-    ifelse type-content = "political_campaign"
-    [
-      let manager-id get-sender msg
-      let xyz item 1 get-content msg
-      add-intention (word "handle-cfp-campaign " manager-id " " xyz) "true"
-    ]
-    [
-     ; ... else another type-content
-    ]
-    ]
-    [
-    ifelse get-performative msg = "propose"
-    [
-
-      let canditate-id get-sender msg
-      let xyz item 1 get-content msg
-      set possibleCandidates lput (list canditate-id xyz) possibleCandidates
-    ]
-    [
-    ifelse get-performative msg = "refuse"
-    [
-    ; ... Rejecting contractor
-      ;print "reject-proposal!!!"
-    ]
-    [
-    ifelse get-performative msg = "accept"
-    [
-    let type-content item 0 get-content msg
-    ifelse type-content = "political_campaign"
-    [
-    set politicalCampaignManagerId item 0 get-content msg
-    set campaignPolAttitude item 1 get-content msg
-    set beliefs create-belief "campaign-flag" "true"
-    ]
-    [
-    ; ... else another type-content
-    ]
-    ]
-    [ ]
-    ]
-    ]
-    ]
-   ]
-   ]
-   ]
-   ]
+    ; inform
+    performative-inform content_type msg
+    ; request
+    performative-request content_type msg
+    ; agree
+    performative-agree content_type msg
+    ; cancel
+    performative-cancel content_type msg
   ]
 
   let conviction_queue (list [])
@@ -456,8 +435,6 @@ to perceive-environment
 
   ; if changed status, set new current state
   proactive-behavior
-
-
 
   ; proactive behavior testing part:
   if flagNewDay [
@@ -578,7 +555,7 @@ num-agents
 num-agents
 5
 700
-101.0
+700.0
 1
 1
 NIL
