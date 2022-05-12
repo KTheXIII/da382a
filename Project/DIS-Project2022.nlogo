@@ -22,6 +22,7 @@
 ; 2022-04-28 Added a contract net for organizing political campaign (Mouad, Petter, Reem, Arian, Anas Mohammed, Christian)
 ; 2022-04-28 Fix indentation and bracket hell in process-message routine
 ;            Author: PK
+; 2022-05-04 Broadcaster of randomized political messages (Gabriella, Drilon, Alban, Nour, Nezar)
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
@@ -36,17 +37,16 @@ __includes [
 
 ; ************ EXTENSIONS *****************
 extensions [
-  ; vid ; used for recording of the simulation
-  array
-  table
+; vid ; used for recording of the simulation
+array
+table
 ]
 ; ********************end extensions ********
 
 
 ; ************ BREEDS OF TURTLES *****************
 breed [voters voter]  ;
-breed [broadcasters broadcaster]
-
+breed [broadcasters broadcaster] ;
 ; ********************end breed of turtles ********
 
 
@@ -126,7 +126,6 @@ to setup
   set attitude_cols 5
 
   create-broadcasters 1
-
   ; Create the regions
   setup-regions
 
@@ -136,15 +135,14 @@ to setup
         setup-voters
   ; --- end create and setup voters
 
-  ;
   reset-ticks
   setup-plots
 
   ask voter 1 [
-  set friendsList (list 5 6 7 8 9 10 11) ; <-- test
-  ;call-for-campaign-friends
-  ;set politicalCampaignManager true
-  add-intention (word "call-for-campaign-friends") "true"
+    set friendsList (list 5 6 7 8 9 10 11) ; <-- test
+    ;call-for-campaign-friends
+    ;set politicalCampaignManager true
+    add-intention (word "call-for-campaign-friends") "true"
   ]
 end
 
@@ -174,9 +172,8 @@ to go
   set old_month month
   set old_year year
 
-
   ; Sending political messages to random selection of agents
-
+  if flagNewDay [broadcasting]
 
   ; Changing the status of some random unemployed adults to employed
 
@@ -197,30 +194,9 @@ to go
     ; Execute all of the intentions on the intention-stack as reactive behaviors
     while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
     proactive-behavior ; finite state machine for the proactive behavior
+
   ]
 
-  ; testing sending messages
-    ; analyzing the way messages are built
-    ;set informMsg lput "[text [1 1 10]]" lput "content:" (lput (word "receiver:" 2) (list "inform" (word "sender:" who) ) )
-    ;print word "nya informMsg= " informMsg
-
-    ;send lput "[text [1 1 10]]" lput "content:" (lput (word "receiver:" 2) (list "inform" (word "sender:" who) ) )
-    ;print  "string sent"
-  ;ask one-of voters [
-    ;let receiver ([who] of voters in-cone 10 90)
-    ;print receiver
-  ;  let informMsg create-message "inform"
-  ;  set informMsg add-receiver 2 informMsg
-    ;set informMsg add-receiver receiver informMsg
-    ;set informMsg add-multiple-receivers receiver informMsg
-  ;  set informMsg add-content (list "text" (list 1 1 10)) informMsg
-  ;  print informMsg
-    ;send informMsg
-
-    ; trying to put the message on the intention stack
- ;   add-intention "send" informMsg
- ;   execute-intentions
- ; ]
 
   ;----- End Agents to-go part ----------------------------------------
   ;
@@ -228,31 +204,24 @@ to go
 
   ; show/hide things
 end
-
 ;************************end to go/starting part ***********
 
 
 ; ************** FUNCTION and REPORT PART **************
 to broadcasting
-  let n ((num-agents * 0.6) + (random(num-agents * 0.3)) - 1)
+  let receivers ([who] of voters with [age > 17]) ; determines all the possible receivers
+  let n length receivers
+
   ask broadcasters [
-    let receiver n-of n ([who] of voters with [age > 17])
+    let receiver n-of n receivers
     ;print receiver
     let informMsg create-message "inform"
     ;set informMsg add-receiver voters informMsg
     ;set informMsg add-receiver receiver informMsg
     set informMsg add-multiple-receivers receiver informMsg
     set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
-
     print informMsg
     send informMsg
-
-    ; trying to put the message on the intention stack
-    ;add-intention "send" informMsg
-    ;execute-intentions
-  ]
-  ask voters [
-    process-messages
   ]
 end
 
@@ -261,7 +230,6 @@ to send-current-pol-att
     let informMsg create-message "inform"
     set informMsg add-multiple-receivers friendsList informMsg
     set informMsg add-content (list "pol_attitude" current_pol_attitude) informMsg
-
     print informMsg
     send informMsg
 end
@@ -291,8 +259,6 @@ to handle-cfp-campaign [managerid pol_attitude]
   send cfpMsg
  ]
 end
-
-
 
 ; Inform
 to process-pol-attitude [content_type message]
@@ -397,6 +363,7 @@ to process-messages
   ; Logic for adding incoming conviction value into the our current agent
   ; conviction queue for later processing. This is required because the
   ; intention stack cannot store data.
+
   while [get-message-no-remove != "no_message"] [
     let msg get-message  ; pop the message stack
     let content_type item 0 get-content msg
@@ -438,13 +405,15 @@ to perceive-environment
 
   ; proactive behavior testing part:
   if flagNewDay [
-    print "New Day!"
-    broadcasting
-
+    ;print "New Day!"
+    ;broadcasting
   ]
 
   if flagNewWeek [
-  ; Select possible candidates
+    ;print "New Week!"
+    ;send-current-pol-att to friends
+    send-current-pol-att
+
   if politicalCampaignManager = true [
   if possibleCandidates != []
   [
@@ -452,43 +421,46 @@ to perceive-environment
    foreach possibleCandidates
    [
    [index] ->
-   set campaignCandidates lput (list (item 0 index) (item 1 index)) campaignCandidates
-   let msg create-message "accept"
-   set msg add-content (list "political_campaign" item 1 index) msg
-   set msg add-receiver item 0 index msg
-   send msg
+    set campaignCandidates lput (list (item 0 index) (item 1 index)) campaignCandidates
+    let msg create-message "accept"
+    set msg add-content (list "political_campaign" item 1 index) msg
+    set msg add-receiver item 0 index msg
+    send msg
    ]
 
    if length possibleCandidates < 3 [
-   print "We need more people!"
    add-intention (word "call-for-campaign-friends") "true"
    ]
 
    set possibleCandidates []
-   print campaignCandidates
+   ; The campaignCandidates:
+   ;print campaignCandidates
   ]
   ]
   ]
 
   if flagNewMonth [
-    print "New Month!"
-
+    ;print "New Month!"
   ]
 
-  if flagNewYear [
-  print "New Year!"
+  if flagNewYear [	
+    ;print "New Year!"	
+    ; Increase job wage, if status is adult and not employed.	
+    if flagEmployed [	
+      set old_wage wage	
+      let yearly_increase random-float 0.08	
+      set yearly_increase yearly_increase + 1	
+      set wage wage * yearly_increase	
+    ]
 
-    ; Increase job wage, if status is adult and not employed.
-  if flagEmployed [
-    set old_wage wage
-    let yearly_increase random-float 0.08
-    set yearly_increase yearly_increase + 1
-    set wage wage * yearly_increase
+    ; Todo "Managern följer utvecklingen av agenternas current_pol_attitude för att se om summan ökar."
+    if politicalCampaignManager = true
+    [
+    ; ... Something here.
+    ]
   ]
 
-  ; Todo "Managern följer utvecklingen av agenternas current_pol_attitude för att se om summan ökar."
 
-  ]
   ;--end proactive behavior testing part ---
 end
 
@@ -505,6 +477,8 @@ to remove-friend [id]
 print "remove-friend"
 ; Implemented by other group.
 end
+
+
 
 ;************** end function and report part **************
 @#$#@#$#@
@@ -529,8 +503,8 @@ GRAPHICS-WINDOW
 66
 0
 33
-1
-1
+0
+0
 1
 ticks
 30.0
@@ -555,7 +529,7 @@ num-agents
 num-agents
 5
 700
-700.0
+101.0
 1
 1
 NIL
@@ -585,7 +559,7 @@ BUTTON
 73
 go
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -596,12 +570,12 @@ NIL
 1
 
 INPUTBOX
-143
-505
-202
-581
+142
+520
+192
+580
 tickNum
-2.0
+1.0
 1
 0
 Number

@@ -68,57 +68,57 @@ end
 to setup-heatmap
   setup-init-attitude-value
 
-;  let polLeft 12.6
-;  let polSoc 39.5
-;  let polMid 9.3
-;  let polCons 22.1
-;  let polRight 15.7
-;  ; testing an alternative to heatmap
-;  ask voters [
-;    set current_pol_array array:from-list [-1 1 1 ]; initializing the array
-;    create-pol_plane
-;  ]
-;
-;  ask n-of (floor( num-agents * polLeft / 100.0)) voters with [array:item current_pol_array 0 = -1]
-;  [
-;    array:set current_pol_array 0 0
-;    set_pol_attitude current_pol_array
-;  ]
-;  ask n-of (floor( num-agents * polSoc / 100.0)) voters with [array:item current_pol_array 0 = -1]
-;  [
-;    array:set current_pol_array 0 1
-;    set_pol_attitude current_pol_array
-;  ]
-;  ask n-of (floor( num-agents * polMid / 100.0)) voters with [array:item current_pol_array 0 = -1]
-;  [
-;    array:set current_pol_array 0 2
-;    set_pol_attitude current_pol_array
-;  ]
-;  ask n-of (floor( num-agents * polCons / 100.0)) voters with [array:item current_pol_array 0 = -1]
-;  [
-;    array:set current_pol_array 0 3
-;    set_pol_attitude current_pol_array
-;  ]
-;  ask n-of (floor( num-agents * polRight / 100.0)) voters with [array:item current_pol_array 0 = -1]
-;  [
-;    array:set current_pol_array 0 4
-;    set_pol_attitude current_pol_array
-;  ]
-;
-;  ; rest if any
-;  ask voters with [array:item current_pol_array 0 = -1]
-;  [
-;    array:set current_pol_array 0 random 5
-;    set_pol_attitude current_pol_array
-;  ]
-;
-;  ; testing alternative to heatmap
-;  ask voters [
-;    let lpol strongest_pol_attitude
-;    print (word "voter:" who ": strongest pol_attitude: " lpol)
-;    print (word ": in parts-first item: " (item 0 lpol) " 2nd item:conv= " (item 1 lpol))
-;  ]
-;  ; end testing alternative to heatmap
+  let polLeft 12.6
+  let polSoc 39.5
+  let polMid 9.3
+  let polCons 22.1
+  let polRight 15.7
+  ; testing an alternative to heatmap
+  ask voters [
+    set current_pol_array array:from-list [-1 1 1 ]; initializing the array
+    create-pol_plane
+  ]
+
+  ask n-of (floor( num-agents * polLeft / 100.0)) voters with [array:item current_pol_array 0 = -1]
+  [
+    array:set current_pol_array 0 0
+    set_pol_attitude current_pol_array
+  ]
+  ask n-of (floor( num-agents * polSoc / 100.0)) voters with [array:item current_pol_array 0 = -1]
+  [
+    array:set current_pol_array 0 1
+    set_pol_attitude current_pol_array
+  ]
+  ask n-of (floor( num-agents * polMid / 100.0)) voters with [array:item current_pol_array 0 = -1]
+  [
+    array:set current_pol_array 0 2
+    set_pol_attitude current_pol_array
+  ]
+  ask n-of (floor( num-agents * polCons / 100.0)) voters with [array:item current_pol_array 0 = -1]
+  [
+    array:set current_pol_array 0 3
+    set_pol_attitude current_pol_array
+  ]
+  ask n-of (floor( num-agents * polRight / 100.0)) voters with [array:item current_pol_array 0 = -1]
+  [
+    array:set current_pol_array 0 4
+    set_pol_attitude current_pol_array
+  ]
+
+  ; rest if any
+  ask voters with [array:item current_pol_array 0 = -1]
+  [
+    array:set current_pol_array 0 random 5
+    set_pol_attitude current_pol_array
+  ]
+
+  ; testing alternative to heatmap
+  ask voters [
+    let lpol strongest_pol_attitude
+    print (word "voter:" who ": strongest pol_attitude: " lpol)
+    print (word ": in parts-first item: " (item 0 lpol) " 2nd item:conv= " (item 1 lpol))
+  ]
+  ; end testing alternative to heatmap
 end
 
 ; Get the attitude plane current coordinate and the calculated
