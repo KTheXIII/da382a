@@ -32,6 +32,7 @@ __includes [
   "proactive.nls"
   "polattitude.nls"
   "campaign.nls"
+  "electionday.nls"
 ]
 ; ********************end included files ********
 
