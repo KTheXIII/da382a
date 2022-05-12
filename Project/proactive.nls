@@ -45,7 +45,7 @@ end
 
 ; -- Adults --
 to has-a-job
-  print "Has a job!"
+  ;print "Has a job!"
   if not flagEmployed [
     set current_state [ -> has-no-job ]
   ]
@@ -53,7 +53,7 @@ end
 
 ; Adult, do not have a job. 
 to has-no-job
-  print "Applying for jobs"
+  ;print "Applying for jobs"
   if flagEmployed
   [set current_state [ -> has-a-job ]]
   

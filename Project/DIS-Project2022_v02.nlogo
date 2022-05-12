@@ -19,7 +19,7 @@
 ;            Authors: Isac Petterson (IP), Johan Skäremo (JS), PK, EL, Christian Heisterkamp (CH), Ademir Zjajo (AZ)
 ; 2022-04-21 Fixed a bug in sum-heatmap.
 ; 2022-04-21 Extended process_messages and added inform political attitude, friend-request, and remove-friend are added (Marcus, Linnéa, Mouad, Reem, Petter)
-;
+; 2022-04-28 Added a contract net for organizing political campaign (Mouad, Petter, Reem, Arian, Anas Mohammed, Christian)
 ;
 ; ************ INCLUDED FILES *****************
 __includes [
@@ -97,7 +97,14 @@ voters-own [
   current_pol_array; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
   pol_tbl ; table for the political plane with key "x y"
   conv_tbl ; table for the political conviction, with same key "x y"
-  ]
+
+  ; Campaign variables
+  politicalCampaignManager ; True or false if the agent is a manager for a political campaign.
+  politicalCampaignManagerId ; The managers ID
+  campaignPolAttitude ; The political attitude for the campaign.
+  campaignCandidates ; List of candidates that are participating in the campaign
+  possibleCandidates ; Temporary list of agents that are proposing to be part of the campaign.
+]
 ; *********************end agent-specific variables *************
 
 ; ************* PATCH-SPECIFIC VARIABLES *********
@@ -134,6 +141,13 @@ to setup
   ;
   reset-ticks
   setup-plots
+
+  ask voter 1 [
+  set friendsList (list 5 6 7 8 9 10 11) ; <-- test
+  ;call-for-campaign-friends
+  ;set politicalCampaignManager true
+  add-intention (word "call-for-campaign-friends") "true"
+  ]
 end
 
 ; **************************end setup part *******
@@ -179,13 +193,12 @@ to go
 ;
  ; Ask agents to do something.
   ask voters [
-    ;process-messages ; process messages in the message-queue.
+    process-messages ; process messages in the message-queue.
     perceive-environment ; updates beliefs about the environment
 
     ; Execute all of the intentions on the intention-stack as reactive behaviors
-    ;while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
-    ;proactive-behavior ; finite state machine for the proactive behavior
-
+    while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
+    proactive-behavior ; finite state machine for the proactive behavior
   ]
 
   ; testing sending messages
@@ -195,7 +208,36 @@ to go
 
     ;send lput "[text [1 1 10]]" lput "content:" (lput (word "receiver:" 2) (list "inform" (word "sender:" who) ) )
     ;print  "string sent"
+  ;ask one-of voters [
+    ;let receiver ([who] of voters in-cone 10 90)
+    ;print receiver
+  ;  let informMsg create-message "inform"
+  ;  set informMsg add-receiver 2 informMsg
+    ;set informMsg add-receiver receiver informMsg
+    ;set informMsg add-multiple-receivers receiver informMsg
+  ;  set informMsg add-content (list "text" (list 1 1 10)) informMsg
+  ;  print informMsg
+    ;send informMsg
 
+    ; trying to put the message on the intention stack
+ ;   add-intention "send" informMsg
+ ;   execute-intentions
+ ; ]
+
+  ;ask voter 2 [
+  ;  print incoming-queue
+  ;]
+
+  ask voter 1 [
+   ; For testing cfp
+
+   ; send cfp to friendslist
+    ;set friendsList (list 5 6 7 8 9 10 11) ; <-- test
+    ;call-for-campaign-friends
+    ;print "Pol:"
+    ;print strongest_pol_attitude
+    ;
+  ]
 
 
   ;----- End Agents to-go part ----------------------------------------
@@ -242,6 +284,33 @@ to send-current-pol-att
     send informMsg
 end
 
+to call-for-campaign-friends
+  set politicalCampaignManager true
+  let cfpMsg create-message "cfp"
+  set cfpMsg add-content (list "political_campaign" strongest_pol_attitude ) cfpMsg
+  set cfpMsg add-multiple-receivers friendsList cfpMsg
+  send cfpMsg
+end
+
+to handle-cfp-campaign [managerid pol_attitude]
+ ifelse random 2 = 0
+ [
+  ; Accept
+  let cfpMsg create-message "propose"
+  set cfpMsg add-content (list "political_campaign" strongest_pol_attitude ) cfpMsg
+  set cfpMsg add-receiver managerid cfpMsg
+  send cfpMsg
+ ]
+ [
+  ; Decline
+  let cfpMsg create-message "refuse"
+  set cfpMsg add-content (list "political_campaign" strongest_pol_attitude ) cfpMsg
+  set cfpMsg add-receiver managerid cfpMsg
+  send cfpMsg
+ ]
+end
+
+
 
 to process-messages
 ; reads and interprets all the messages on the message-queue (might need a while-loop)
@@ -263,6 +332,7 @@ to process-messages
       [
         let xyz item 1 get-content msg
         add-intention (word "sum-heatmap" xyz) "true"
+
         ;sum-heatmap (xyz)
         print "love"
       ]
@@ -314,7 +384,53 @@ to process-messages
       ; .. else another type-content
       ]
     ]
-   []
+   [
+    ifelse get-performative msg = "cfp"
+    [
+    let type-content item 0 get-content msg
+    ifelse type-content = "political_campaign"
+    [
+      let manager-id get-sender msg
+      let xyz item 1 get-content msg
+      add-intention (word "handle-cfp-campaign " manager-id " " xyz) "true"
+    ]
+    [
+     ; ... else another type-content
+    ]
+    ]
+    [
+    ifelse get-performative msg = "propose"
+    [
+
+      let canditate-id get-sender msg
+      let xyz item 1 get-content msg
+      set possibleCandidates lput (list canditate-id xyz) possibleCandidates
+    ]
+    [
+    ifelse get-performative msg = "refuse"
+    [
+    ; ... Rejecting contractor
+      ;print "reject-proposal!!!"
+    ]
+    [
+    ifelse get-performative msg = "accept"
+    [
+    let type-content item 0 get-content msg
+    ifelse type-content = "political_campaign"
+    [
+    set politicalCampaignManagerId item 0 get-content msg
+    set campaignPolAttitude item 1 get-content msg
+    set beliefs create-belief "campaign-flag" "true"
+    ]
+    [
+    ; ... else another type-content
+    ]
+    ]
+    [ ]
+    ]
+    ]
+    ]
+   ]
    ]
    ]
    ]
@@ -349,10 +465,32 @@ to perceive-environment
     broadcasting
 
   ]
-  if flagNewWeek [
-    print "New Week!"
-    send-current-pol-att
 
+  if flagNewWeek [
+  ; Select possible candidates
+  if politicalCampaignManager = true [
+  if possibleCandidates != []
+  [
+   if length possibleCandidates > 10 [ set possibleCandidates sublist possibleCandidates 1 10]
+   foreach possibleCandidates
+   [
+   [index] ->
+   set campaignCandidates lput (list (item 0 index) (item 1 index)) campaignCandidates
+   let msg create-message "accept"
+   set msg add-content (list "political_campaign" item 1 index) msg
+   set msg add-receiver item 0 index msg
+   send msg
+   ]
+
+   if length possibleCandidates < 3 [
+   print "We need more people!"
+   add-intention (word "call-for-campaign-friends") "true"
+   ]
+
+   set possibleCandidates []
+   print campaignCandidates
+  ]
+  ]
   ]
 
   if flagNewMonth [
@@ -361,8 +499,17 @@ to perceive-environment
   ]
 
   if flagNewYear [
-    print "New Year!"
+  print "New Year!"
 
+    ; Increase job wage, if status is adult and not employed.
+  if flagEmployed [
+    set old_wage wage
+    let yearly_increase random-float 0.08
+    set yearly_increase yearly_increase + 1
+    set wage wage * yearly_increase
+  ]
+
+  ; Todo "Managern följer utvecklingen av agenternas current_pol_attitude för att se om summan ökar."
 
   ]
   ;--end proactive behavior testing part ---
@@ -430,8 +577,8 @@ SLIDER
 num-agents
 num-agents
 5
-100
-10.0
+700
+101.0
 1
 1
 NIL
