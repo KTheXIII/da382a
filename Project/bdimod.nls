@@ -96,7 +96,7 @@ to execute-intentions
    [
     let val intention-done myInt
     if cmd = "send" [send val]
-;    if cmd = "sum-heatmap" [sum-heatmap val]
+    ;if cmd = "sum-heatmap" [sum-heatmap val]
     ;if cmd = "xxx" [xxx val]
     ;if cmd = "yyy" [yyy val]
     remove-intention myInt
