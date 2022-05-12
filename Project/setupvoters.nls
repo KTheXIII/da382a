@@ -114,7 +114,11 @@ to setup-voters
   setup-heatmap
 end
 
-
+to setup-broadcasters
+    set intentions []
+    set beliefs []
+    set incoming-queue []
+end
 
 
 ;--- End setup of the voter agents---------------------------

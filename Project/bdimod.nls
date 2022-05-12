@@ -92,13 +92,9 @@ to execute-intentions
   if show-intentions [set label myInt] ;; Just for debugging. 
   if show-intentions [show myInt] ;; Just for debugging. 
   let cmd intention-name myInt
-  ifelse member? cmd "send sum-heatmap xxx yyy"
-   [
-    let val intention-done myInt
-    if cmd = "send" [send val]
-    if cmd = "sum-heatmap" [sum-heatmap val]
-    ;if cmd = "xxx" [xxx val]
-    ;if cmd = "yyy" [yyy val]
+  ifelse member? "send" cmd
+  [
+    send intention-done myint
     remove-intention myInt
   ]
   [
