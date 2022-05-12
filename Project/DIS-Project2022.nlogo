@@ -95,6 +95,7 @@ voters-own [
   wage old_wage
   region
   current_pol_attitude ; holds x and y values of attitude plane
+  current_pol_ranking  ; Holds x cordinate for the 3 highest ranked
   current_pol_array    ; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
   pol_tbl              ; table for the political plane with key "x y"
   conv_tbl             ; table for the political conviction, with same key "x y"
