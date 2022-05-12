@@ -23,7 +23,7 @@
 
 ;;; creates a new belief. (does not stores it in belief memory).
 to-report create-belief [b-type content]
-  ;if show-intentions [type b-type show content]
+  if show-intentions [type b-type show content]
   report (list b-type content)
 end 
 
@@ -89,8 +89,8 @@ end
 to execute-intentions
   if empty? intentions [stop]
   let myInt get-intention
-  ;if show-intentions [set label myInt] ;; Just for debugging. 
-  ;if show-intentions [show myInt] ;; Just for debugging. 
+  if show-intentions [set label myInt] ;; Just for debugging. 
+  if show-intentions [show myInt] ;; Just for debugging. 
   let cmd intention-name myInt
   ifelse member? cmd "send sum-heatmap xxx yyy"
    [
@@ -105,7 +105,7 @@ to execute-intentions
     run intention-name myInt
     if runresult intention-done myInt [remove-intention myInt]
   ]
-  ;if show-intentions [set label intentions] ;; Just for debugging. 
+  if show-intentions [set label intentions] ;; Just for debugging. 
 end 
 
 ;;;; Intentions Structure Access Functions

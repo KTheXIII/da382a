@@ -39,7 +39,7 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Message reception deals with updating incoming-queue
 to receive [msg]
-   ;if show_messages [show msg]
+   if show_messages [show msg]
    set incoming-queue lput msg incoming-queue
 end 
 

@@ -154,7 +154,6 @@ to update_ranking
     ; move to next collumn
     set i (i + 1)
   ]
-  show party-conviction
 
   ; Find biggest 3 values and their indexes
   ; Loop 3 times
@@ -178,7 +177,6 @@ to update_ranking
 
     set i (i + 1)
   ]
-  show current_pol_ranking
 end
 
 ;------------------------------------------------------------------

@@ -154,7 +154,6 @@ to setup
   let informMsg create-message "inform"
   set informMsg add-receiver 2 informMsg
   set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
-  print informMsg
   send informMsg
   ]
 
@@ -231,23 +230,19 @@ to broadcasting
 
   ask broadcasters [
 let receiver n-of n receivers
-    ;print receiver
     let informMsg create-message "inform"
     ;set informMsg add-receiver voters informMsg
     ;set informMsg add-receiver receiver informMsg
     set informMsg add-multiple-receivers receiver informMsg
     set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
-    print informMsg
     send informMsg
   ]
 end
 
 to send-current-pol-att
-;print receiver
     let informMsg create-message "inform"
     set informMsg add-multiple-receivers friendsList informMsg
     set informMsg add-content (list "pol_attitude" current_pol_attitude) informMsg
-    print informMsg
     send informMsg
 end
 
@@ -468,15 +463,12 @@ end
 
 ; ... Implemented by other group.
 to add-friend [id pol_attitude]
-print "add-friend"
-print id
-print pol_attitude
+
 ; Implemented by other group.
 end
 
 ; ... Implemented by other group.
 to remove-friend [id]
-print "remove-friend"
 ; Implemented by other group.
 end
 
