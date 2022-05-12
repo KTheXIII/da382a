@@ -23,6 +23,7 @@
 ; 2022-05-04 Broadcaster of randomized political messages (Gabriella, Drilon, Alban, Nour, Nezar)
 ; 2022-05-05 Fixed bugs in the process-messages. (Mouad, Reem, Petter, Arian, Anas, Mohammad, Chrsitian Sjösvärd)
 ; 2022-05-12 Integrated the new pol-attitude functions with version 3. (Mouad, Petter, Reem)
+; 2022-05-12 Added new file electionday for calculating election result stored in global variable resultlist with borda count. (Isac Pettersson, Christian Heisterkamp)
 ; ************ INCLUDED FILES *****************
 __includes [
     "bdimod.nls" ; modified version that allows certain intentions to pass values along
@@ -71,6 +72,8 @@ globals [
   numAgentRegion3
 
   randomBroadcast
+
+  resultlist  ; Election result list for borda count
 ]
 
 ; ******************end global variables ***********
@@ -102,10 +105,12 @@ voters-own [
   ; Campaign variables
   politicalCampaignManager ; True or false if the agent is a manager for a political campaign.
   politicalCampaignManagerId ; The managers ID
-  campaignPolAttitude ; The political attitude for the campaign.
-  campaignCandidates ; List of candidates that are participating in the campaign
-  possibleCandidates ; Temporary list of agents that are proposing to be part of the campaign.
-  ]
+  campaignPolAttitude        ; The political attitude for the campaign.
+  campaignCandidates         ; List of candidates that are participating in the campaign
+  possibleCandidates         ; Temporary list of agents that are proposing to be part of the campaign.
+
+
+]
 ; *********************end agent-specific variables *************
 
 ; ************* PATCH-SPECIFIC VARIABLES *********
@@ -127,8 +132,11 @@ to setup
   set attitude_cols 5
 
   create-broadcasters 1
+
+  set resultlist (list 0 0 0 0 0)
   ; Create the regions
   setup-regions
+
 
   ; Create and setup voters (functions included in 'setupvoters.nls'
         ; set the regions of the agents
@@ -181,7 +189,6 @@ to go
   set old_week week
   set old_month month
   set old_year year
-
   ; Sending political messages to random selection of agents
   if flagNewDay [broadcasting]
 
@@ -377,6 +384,7 @@ to process-messages
 
   if flagNewMonth[
     add-intention "update-pol-attitude" "true"
+
   ]
 
 
@@ -728,6 +736,24 @@ false
 "set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 3\nset-histogram-num-bars 5" ""
 PENS
 "default" 1.0 1 -2674135 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "histogram [array:item current_pol_array 0] of voters"
+
+PLOT
+5
+278
+205
+428
+Election result borda
+Parties
+%
+0.0
+5.0
+0.0
+6.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "histogram [resultlist]"
 
 @#$#@#$#@
 ## WHAT IS IT?

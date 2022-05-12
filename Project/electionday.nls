@@ -1,1 +1,29 @@
-;Super cool fil
+; File with functionality regarding the election result 
+; using borda count. The election result is displayed in
+; the resultlist under global variables in main file.
+
+; FILE HISTORY:
+; 2022-05-12 Added borda count calculation procedure (to calculate-result).
+;            Should be called when every voteres current_pol_ranking 
+;            should be put together using borda count. Not displayed
+;            in heistogram YET.
+;            Authors: Christian Heisterkamp (CH), Isac Pettersson (IP)
+;
+;
+;---------------------------------------------------
+
+
+to calculate-result
+  ask voters [
+    let worth 3
+    let i 0
+    let pol_ranking_length length current_pol_ranking 
+    repeat pol_ranking_length [ 
+      let oldvalue item (item i current_pol_ranking) resultlist
+      let newvalue worth + oldvalue
+      set resultlist replace-item (item i current_pol_ranking) resultlist newvalue
+      set worth worth - 1
+      set i i + 1
+    ]
+  ]
+end
