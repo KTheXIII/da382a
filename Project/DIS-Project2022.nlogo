@@ -20,19 +20,25 @@
 ; 2022-04-21 Fixed a bug in sum-heatmap.
 ; 2022-04-21 Extended process-messages and added inform political attitude, friend-request, and remove-friend are added (Marcus, Linnéa, Mouad, Reem, Petter)
 ; 2022-04-28 Added a contract net for organizing political campaign (Mouad, Petter, Reem, Arian, Anas Mohammed, Christian S)
-; 2022-04-28 Fix indentation and bracket hell in process-message routine
-;            Author: PK
 ; 2022-05-04 Broadcaster of randomized political messages (Gabriella, Drilon, Alban, Nour, Nezar)
 ; 2022-05-05 Fixed bugs in the process-messages. (Mouad, Reem, Petter, Arian, Anas, Mohammad, Chrsitian Sjösvärd)
 ; 2022-05-12 Integrated the new pol-attitude functions with version 3. (Mouad, Petter, Reem)
+; 2022-05-12 Did changes in "send msg" in communication.nls (Nour, Alban, Nezar, Gabriella, Drilon, Rasmus)
+; 2022-05-12 Did changes in "update-pol-attitude" in polattitude.nls(Nour, Alban, Nezar, Gabriella, Drilon, Rasmus)
+; 2022-05-12 Fixed showing messages between agents with links in main code and communcation.nls(Nour, Gabriella, Rasmus)
+; 2022-05-12 Added the code of agents turning red if their political view changed after a month in the main code and polattitude.nls(Alban, Nezar, Drilon)
+; 2022-05-12 Added the code for agents to send their political attitude to their friends. Friendslist is still a test list(Alban, Nezar, Gabriella, Drilon, Nour)
+
 ; ************ INCLUDED FILES *****************
 __includes [
-  "bdimod.nls" ; modified version that allows certain intentions to pass values along
-  "communication.nls"
-  "setupvoters.nls"
-  "proactive.nls"
-  "polattitude.nls"
-  "campaign.nls"
+    "bdimod.nls" ; modified version that allows certain intentions to pass values along
+    "communication.nls"
+    "setupvoters.nls"
+    "proactive.nls"
+    "polattitude.nls"
+  ;
+  ;
+
 ]
 ; ********************end included files ********
 
@@ -95,17 +101,17 @@ voters-own [
   wage old_wage
   region
   current_pol_attitude ; holds x and y values of attitude plane
-  current_pol_array    ; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
-  pol_tbl              ; table for the political plane with key "x y"
-  conv_tbl             ; table for the political conviction, with same key "x y"
+  current_pol_array; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
+  pol_tbl ; table for the political plane with key "x y"
+  conv_tbl ; table for the political conviction, with same key "x y"
 
   ; Campaign variables
-  politicalCampaignManager   ; True or false if the agent is a manager for a political campaign.
+  politicalCampaignManager ; True or false if the agent is a manager for a political campaign.
   politicalCampaignManagerId ; The managers ID
-  campaignPolAttitude        ; The political attitude for the campaign.
-  campaignCandidates         ; List of candidates that are participating in the campaign
-  possibleCandidates         ; Temporary list of agents that are proposing to be part of the campaign.
-]
+  campaignPolAttitude ; The political attitude for the campaign.
+  campaignCandidates ; List of candidates that are participating in the campaign
+  possibleCandidates ; Temporary list of agents that are proposing to be part of the campaign.
+  ]
 ; *********************end agent-specific variables *************
 
 ; ************* PATCH-SPECIFIC VARIABLES *********
@@ -139,17 +145,10 @@ to setup
 
 
   ;
-  ask voter 1 [ ;TODO: replace by a dedicated voter with highest conviction of his or her political attitude!
+  ask voters [ ;TODO: replace by a dedicated voter with highest conviction of his or her political attitude!
   set friendsList (list 5 6 7 8 9 10 11) ; <-- test, should already have a friendsList or not?
   add-intention (word "call-for-campaign-friends") "true"
-
-  let informMsg create-message "inform"
-  set informMsg add-receiver 2 informMsg
-  set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
-  print informMsg
-  send informMsg
   ]
-
 
   ; must be last in the setup-part:
   reset-ticks
@@ -183,7 +182,7 @@ to go
   set old_year year
 
   ; Sending political messages to random selection of agents
-  if flagNewDay [broadcasting]
+  ;if flagNewDay [broadcasting]
 
   ; Changing the status of some random unemployed adults to employed
 
@@ -204,10 +203,13 @@ to go
     ; Execute all of the intentions on the intention-stack as reactive behaviors
     while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
     proactive-behavior ; finite state machine for the proactive behavior
-
   ]
+  clear-links
 
-
+  ask voters[
+    set color white
+  ]
+  ask one-of voters [ update-date ]
   ;----- End Agents to-go part ----------------------------------------
   ;
   tick
@@ -236,7 +238,6 @@ let receiver n-of n receivers
 end
 
 to send-current-pol-att
-;print receiver
     let informMsg create-message "inform"
     set informMsg add-multiple-receivers friendsList informMsg
     set informMsg add-content (list "pol_attitude" current_pol_attitude) informMsg
@@ -244,7 +245,20 @@ to send-current-pol-att
     send informMsg
 end
 
-
+to update-date
+  if flagNewDay [
+    print "New Day!"
+  ]
+  if flagNewWeek [
+    print "New Week!"
+  ]
+  if flagNewMonth [
+    print "New Month!"
+  ]
+  if flagNewYear [
+    print "New Year!"
+  ]
+end
 
 to process-messages
 ; reads and interprets all the messages on the message-queue (might need a while-loop)
@@ -399,14 +413,13 @@ to perceive-environment
 
   ; proactive behavior testing part:
   if flagNewDay [
-    ;print "New Day!"
-    ;broadcasting
+    broadcasting
   ]
 
   if flagNewWeek [
-    ;print "New Week!"
     ;send-current-pol-att to friends
     send-current-pol-att
+    update-pol-attitude
 
   if politicalCampaignManager = true [
   if possibleCandidates != []
@@ -433,12 +446,11 @@ to perceive-environment
   ]
   ]
 
-  if flagNewWeek [
-    ;print "New Month!"
+  if flagNewMonth [
+    update-pol-attitude
   ]
 
   if flagNewYear [	
-    ;print "New Year!"	
     ; Increase job wage, if status is adult and not employed.	
     if flagEmployed [	
       set old_wage wage	
@@ -523,7 +535,7 @@ num-agents
 num-agents
 5
 700
-101.0
+97.0
 1
 1
 NIL
@@ -728,6 +740,17 @@ false
 "set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 3\nset-histogram-num-bars 5" ""
 PENS
 "default" 1.0 1 -2674135 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "histogram [array:item current_pol_array 0] of voters"
+
+MONITOR
+77
+41
+134
+86
+Days
+day
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
