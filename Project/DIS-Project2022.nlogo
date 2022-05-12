@@ -237,7 +237,7 @@ end
 to call-for-campaign-friends
   set politicalCampaignManager true
   let cfpMsg create-message "cfp"
-  set cfpMsg add-content (list "political_campaign" strongest_pol_attitude ) cfpMsg
+  set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-multiple-receivers friendsList cfpMsg
   send cfpMsg
 end
@@ -247,14 +247,14 @@ to handle-cfp-campaign [managerid pol_attitude]
  [
   ; Accept
   let cfpMsg create-message "propose"
-  set cfpMsg add-content (list "political_campaign" strongest_pol_attitude ) cfpMsg
+  set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-receiver managerid cfpMsg
   send cfpMsg
  ]
  [
   ; Decline
   let cfpMsg create-message "refuse"
-  set cfpMsg add-content (list "political_campaign" strongest_pol_attitude ) cfpMsg
+  set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-receiver managerid cfpMsg
   send cfpMsg
  ]
@@ -291,15 +291,15 @@ to process-request-campaign-attitude [content_type message]
     add-intention (word "sum-heatmap" xyz) "true"
 
     let heatmap (item 1 (item 0 beliefs-of-type "attitude-plane"))
-    let pol-attitude center-of-mass heatmap
-    let replyMsg create-message "Temp_message"
-    ifelse (neighbour-check xyz heatmap)
-      [set replyMsg create-message "agree"]
-      [set replyMsg create-message "cancel"]
+;;    let pol-attitude center-of-mass heatmap
+;    let replyMsg create-message "Temp_message"
+;    ifelse (neighbour-check xyz heatmap)
+;      [set replyMsg create-message "agree"]
+;      [set replyMsg create-message "cancel"]
 
-    set replyMsg add-receiver 2 replyMsg
-    set replyMsg add-content (list "campain_respons" (pol-attitude)) replyMsg
-    add-intention (word "send" replyMsg) "true"
+;    set replyMsg add-receiver 2 replyMsg
+;    set replyMsg add-content (list "campain_respons" (pol-attitude)) replyMsg
+;    add-intention (word "send" replyMsg) "true"
   ]
 end
 
@@ -716,24 +716,6 @@ false
 "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5"
 PENS
 "default" 1.0 1 -16777216 true "histogram [current_pol_attitude] of voters" "histogram [current_pol_attitude] of voters"
-
-PLOT
-5
-281
-205
-431
-alternative Political attitude
-political spectrum
-Nr voters
-0.0
-10.0
-0.0
-10.0
-true
-false
-"set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 3\nset-histogram-num-bars 5" ""
-PENS
-"default" 1.0 1 -2674135 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "histogram [array:item current_pol_array 0] of voters"
 
 @#$#@#$#@
 ## WHAT IS IT?
