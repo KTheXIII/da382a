@@ -25,6 +25,9 @@
 ; 2022-05-04 Broadcaster of randomized political messages (Gabriella, Drilon, Alban, Nour, Nezar)
 ; 2022-05-05 Fixed bugs in the process-messages. (Mouad, Reem, Petter, Arian, Anas, Mohammad, Chrsitian Sjösvärd)
 ; 2022-05-12 Integrated the new pol-attitude functions with version 3. (Mouad, Petter, Reem)
+; 2022-05-18 electionDay calculation, this function runs when electionDay button is press.
+;            The vote will be calculate and print out the the winning party with vote count.
+;            Authors: PK, ML, JS, AZ
 ; ************ INCLUDED FILES *****************
 __includes [
   "bdimod.nls" ; modified version that allows certain intentions to pass values along
@@ -475,49 +478,25 @@ print "remove-friend"
 end
 
 to electionDay
-
-  let party0 0
-  let party1 0
-  let party2 0
-  let party3 0
-  let party4 0
-  let parties (list party0 party1 party2 party3 party4)
-
-  let electionVoters floor (0.7 * num-agents)
-
-  ask n-of electionVoters voters[
-    if (age >= 18) [
-      (ifelse (item 0 current_pol_attitude = 0) [
-        set party0 party0 + 1
-      ]
-     item 0 current_pol_attitude = 1 [
-       set party1 party1 + 1
-      ]
-     item 0 current_pol_attitude = 2 [
-       set party2 party2 + 1
-      ]
-     item 0 current_pol_attitude = 3 [
-       set party3 party3 + 1
-      ]
-     item 0 current_pol_attitude = 4
-     [
-       set party4 party4 + 1
-      ])
+  let num_of_election_voters round(0.7 * count voters)
+  let parties n-values attitude_cols [i -> list i 0]
+  ask n-of num_of_election_voters voters [
+    let x item 0 current_pol_attitude
+    let current item x parties
+    let index item 0 current
+    let value item 1 current
+    set parties replace-item x parties list index (value + 1)
+  ]
+  let highest 0
+  let win_party [0 0]
+  foreach parties [value ->
+    if item 1 value > highest [
+      set win_party value
+      set highest item 1 value
     ]
-
   ]
-  ;set parties [party0 party1 party2 party3 party4]
- ; let parties max [party0 party1 party2 party3 party4]
-  show max (list party0 party1 party2 party3 party4)
-  if max (list party0 party1 party2 party3 party4) = party2
-  [
-    print "hej"
-  ]
-  print word "party0: " party0
-  print word "party1: " party1
-  print word "party2: " party2
-  print word "party3: " party3
-  print word "party4: " party4
+  print (word "parties: " parties)
+  print (word "party " item 0 win_party " won, with " item 1 win_party " votes.")
 end
 
 
