@@ -117,7 +117,6 @@ to setup-voters
   setup-educationLevel
    ; Define the political planes and message planes, etc
   ask voters [setup-pol-attitude] ;changed by gks, 2022-05-14
-  setup-employment
   setup-monthlyWage
   setup-familyList
    ; test to fill friendsList
@@ -266,11 +265,7 @@ end
 
 ;TODO:
 to setup-employment
-; see point 7) on pg 24 in the project description
-; dummy function that sets all the agents to employed
-  ask voters [
-    set flagEmployed true
-  ]
+
 end
 
 
