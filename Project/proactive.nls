@@ -78,7 +78,8 @@ end
 
 ; Adult, do not have a job. 
 to has-no-job
-   print "unemployed"
+   set current_state [ -> look-for-job ]
+   ;print "unemployed"
 end
 
 to feel-confirmed
@@ -89,7 +90,7 @@ to look-for-job
   print "looking for job"
   let jobMessage create-message "inform"
   let myRegion region
-  let currentRegion municipalities with [region = myRegion]
+  let currentRegion [who] of (municipalities with [region = myRegion])
   set jobMessage add-multiple-receivers currentRegion jobMessage
   set jobMessage add-content "jobApply" jobMessage
   send jobMessage
