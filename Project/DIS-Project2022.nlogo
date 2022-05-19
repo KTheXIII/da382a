@@ -30,25 +30,26 @@
 ; 2022-05-12 Added the code for agents to send their political attitude to their friends. Friendslist is still a test list(8.1)(Alban, Nezar, Gabriella, Drilon, Nour)
 ; 2022-05-12 Added sending messages and updating political attitude on the intention stack(8.1)(Nour, Alban, Nezar, Gabriella, Drilon)
 ; 2022-05-12 Added switch to show lines of messages being sent(Alban Islami)
-
+; 2022-05-18 electionDay calculation, this function runs when electionDay button is press.
+;            The vote will be calculate and print out the the winning party with vote count.
+;            Authors: PK, ML, JS, AZ
 ; ************ INCLUDED FILES *****************
 __includes [
-    "bdimod.nls" ; modified version that allows certain intentions to pass values along
-    "communication.nls"
-    "setupvoters.nls"
-    "proactive.nls"
-    "polattitude.nls"
-  ;
-  ;
-
+  "bdimod.nls" ; modified version that allows certain intentions to pass values along
+  "communication.nls"
+  "setupvoters.nls"
+  "proactive.nls"
+  "polattitude.nls"
+  "campaign.nls"
+  "electionday.nls"
 ]
 ; ********************end included files ********
 
 ; ************ EXTENSIONS *****************
 extensions [
-; vid ; used for recording of the simulation
-array
-table
+  ; vid ; used for recording of the simulation
+  array
+  table
 ]
 ; ********************end extensions ********
 
@@ -103,9 +104,10 @@ voters-own [
   wage old_wage
   region
   current_pol_attitude ; holds x and y values of attitude plane
-  current_pol_array; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
-  pol_tbl ; table for the political plane with key "x y"
-  conv_tbl ; table for the political conviction, with same key "x y"
+  current_pol_ranking  ; Holds x cordinate for the 3 highest ranked
+  current_pol_array    ; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
+  pol_tbl              ; table for the political plane with key "x y"
+  conv_tbl             ; table for the political conviction, with same key "x y"
 
   ; Campaign variables
   politicalCampaignManager ; True or false if the agent is a manager for a political campaign.
@@ -113,7 +115,7 @@ voters-own [
   campaignPolAttitude ; The political attitude for the campaign.
   campaignCandidates ; List of candidates that are participating in the campaign
   possibleCandidates ; Temporary list of agents that are proposing to be part of the campaign.
-  ]
+]
 ; *********************end agent-specific variables *************
 
 ; ************* PATCH-SPECIFIC VARIABLES *********
@@ -488,6 +490,29 @@ print "remove-friend"
 ; Implemented by other group.
 end
 
+to electionDay
+  let num_of_election_voters round(0.7 * count voters)
+  let parties n-values attitude_cols [i -> list i 0]
+  ask n-of num_of_election_voters voters [
+    let x item 0 current_pol_attitude
+    let current item x parties
+    let index item 0 current
+    let value item 1 current
+    set parties replace-item x parties list index (value + 1)
+  ]
+  let highest 0
+  let win_party [0 0]
+  foreach parties [value ->
+    if item 1 value > highest [
+      set win_party value
+      set highest item 1 value
+    ]
+  ]
+  print (word "parties: " parties)
+  print (word "party " item 0 win_party " won, with " item 1 win_party " votes.")
+end
+
+
 
 
 ;************** end function and report part **************
@@ -547,9 +572,9 @@ HORIZONTAL
 
 BUTTON
 4
-39
+10
 67
-72
+43
 setup
 setup
 NIL
@@ -563,10 +588,10 @@ NIL
 1
 
 BUTTON
-140
-40
-203
-73
+138
+13
+201
+46
 go
 go
 T
@@ -766,6 +791,23 @@ show_lines
 1
 1
 -1000
+
+BUTTON
+53
+61
+149
+94
+NIL
+electionDay
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
