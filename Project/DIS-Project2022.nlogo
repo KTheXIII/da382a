@@ -467,7 +467,7 @@ to perceive-environment
           set next_state  [-> has-a-job]
         ]
         (true) [;TODO: replace with condition for next state "looks for job"
-          set next_state [-> look-for-jobb]
+          set next_state [-> look-for-job]
         ]
 
         [] ;default

@@ -79,13 +79,19 @@ end
 ; Adult, do not have a job. 
 to has-no-job
   ; print 'unemployed'
+  look-for-job
 end
 
 to feel-confirmed
    ;
 end
 
-to look-for-jobb
+to look-for-job
+  let jobMessage create-message "inform"
+  let myRegion region
+  let currentRegion municipalities with [region = myRegion]
+  set jobMessage add-multiple-receivers currentRegion jobMessage
+  send jobMessage
 end
 
 

@@ -29,6 +29,9 @@ to setup-municipalities
   create-municipalities 1 [
     set region 3
    ] ;
+end
+
+to applyForJob
   
 end
 
