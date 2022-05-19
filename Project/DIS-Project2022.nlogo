@@ -342,6 +342,11 @@ to process-messages
           (type-content = "removed-from-list")[
                 let friend-id get-sender msg
                 add-intention (word "remove-friend " friend-id ) "true"]
+          (type-content = "jobApply")[
+            let sender get-sender msg
+            add-intention (word "look-for-job") "true"
+            ;compareJobApplies sender
+          ]
           [])
       ]
       (performative = "request") [
@@ -474,7 +479,7 @@ to perceive-environment
       )
     ]
 
-     (current_state = "look-for-jobb")[
+     (current_state = "look-for-job")[
       if flagEmployed [
         set next_state [-> has-a-job]
         ]

@@ -31,8 +31,8 @@ to setup-municipalities
    ] ;
 end
 
-to applyForJob
-  
+to compareJobApplies [sender]
+  print sender
 end
 
 
@@ -48,4 +48,6 @@ to serve-the-people
     ;to pay taxes
     ;to distribute social welfare money
 ;    ]
+  
+  print "hejhejhej"
 end
