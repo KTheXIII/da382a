@@ -105,7 +105,7 @@ to execute-intentions
     run intention-name myInt
     if runresult intention-done myInt [remove-intention myInt]
   ]
-  ;if show-intentions [set label intentions] ;; Just for debugging. 
+  if show-intentions [set label intentions] ;; Just for debugging. 
 end 
 
 ;;;; Intentions Structure Access Functions

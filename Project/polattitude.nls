@@ -68,6 +68,7 @@ to setup-pol-attitude
   let x (polindex mod attitude_cols)
   let y floor(polindex / attitude_cols)
   set current_pol_attitude list x y
+  set current_pol_ranking [0 0 0]
 end
 
 
@@ -107,6 +108,7 @@ to update-pol-attitude
   array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + levelOfEducation)
   
   if (current_max_w_index != current_pol_index) [
+    ; current oplitical attitude changed
     array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + array:item conviction-plane current_pol_index)
     
     set x (current_max_w_index mod attitude_cols)
@@ -118,6 +120,8 @@ to update-pol-attitude
   ]
    update-belief create-belief "message-plane" message-plane
    update-belief create-belief "conviction-plane" conviction-plane
+   
+   update_ranking
 end
 
 ; Function for increasing the current value in the message-plane when message is received.
@@ -126,6 +130,56 @@ to process_message [x y]
   let new-value matrix_query message-plane x y
   set new-value (new-value + 1)
   matrix_insert message-plane x y new-value
+end
+
+to update_ranking
+  let conviction-plane (item 1 (item 0 beliefs-of-type "conviction-plane"))
+  let party-conviction [0 0 0 0 0]
+  let current-biggest 0
+  let index 0
+
+
+  let i 0
+  let j 0
+  ; Loop through conviction-plane by collumn
+  while [i < 5][
+    set j 0
+    while [j < 3][
+    ; Find the biggest value in each collumn
+      if current-biggest < matrix_query conviction-plane i j [
+        set current-biggest matrix_query conviction-plane i j
+      ]
+      set j (j + 1)
+    ]
+    ; Store the biggest value of each collumn in party-conviction
+    set party-conviction replace-item i party-conviction current-biggest
+    set current-biggest 0
+    ; move to next collumn
+    set i (i + 1)
+  ]
+
+  ; Find biggest 3 values and their indexes
+  ; Loop 3 times
+  set i 0
+  while [i < 3][
+    set j 0
+    set current-biggest 0
+    ; Loop through the party-conviction list
+    while [j < 5][
+      ; find the index for the biggest value
+      if current-biggest < item j party-conviction [
+        set current-biggest item j party-conviction
+        set index j
+        ; set the value at that spot to 0
+        set party-conviction replace-item j party-conviction 0
+      ]
+      set j (j + 1)
+    ]
+    ; store that index in current_pol_ranking on the right place, denoted by the outer loop
+     set current_pol_ranking replace-item i current_pol_ranking index
+
+    set i (i + 1)
+  ]
 end
 
 ;------------------------------------------------------------------

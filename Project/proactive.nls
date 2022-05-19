@@ -27,7 +27,6 @@ to setup-initialState
         set current_state [-> at-elderly-home]
     ][
         ; No default
-        print "Error no status"
     ])
 end
 
@@ -45,8 +44,6 @@ end
 
 ; -- State for the working agents --
 to working-for-campaign
-  print "Working for campaign"
-  
   ;Subtask 2: Send political message to friends
   let msg create-message "inform"
   set msg add-content (list "pol-attitude" campaignPolAttitude) msg
