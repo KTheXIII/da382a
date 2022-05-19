@@ -22,34 +22,37 @@
 ; 2022-04-28 Added a contract net for organizing political campaign (Mouad, Petter, Reem, Arian, Anas Mohammed, Christian S)
 ; 2022-05-04 Broadcaster of randomized political messages (Gabriella, Drilon, Alban, Nour, Nezar)
 ; 2022-05-05 Fixed bugs in the process-messages. (Mouad, Reem, Petter, Arian, Anas, Mohammad, Chrsitian Sjösvärd)
+; 2022-05-05 Send message are now put in the intention stack instead (Mouad, Reem, Petter)
 ; 2022-05-12 Integrated the new pol-attitude functions with version 3. (Mouad, Petter, Reem)
-; 2022-05-12 Did changes in "send msg" in communication.nls (Nour, Alban, Nezar, Gabriella, Drilon, Rasmus)
-; 2022-05-12 Did changes in "update-pol-attitude" in polattitude.nls(Nour, Alban, Nezar, Gabriella, Drilon, Rasmus)
-; 2022-05-12 Fixed showing messages between agents with links in main code and communcation.nls(11.9)(Nour, Gabriella, Rasmus)
 ; 2022-05-12 Added the code of agents turning red if their political view changed after a month in the main code and polattitude.nls(8.1, 11.10)(Alban, Nezar, Drilon)
 ; 2022-05-12 Added the code for agents to send their political attitude to their friends. Friendslist is still a test list(8.1)(Alban, Nezar, Gabriella, Drilon, Nour)
 ; 2022-05-12 Added sending messages and updating political attitude on the intention stack(8.1)(Nour, Alban, Nezar, Gabriella, Drilon)
 ; 2022-05-12 Added switch to show lines of messages being sent(Alban Islami)
-; 2022-05-18 electionDay calculation, this function runs when electionDay button is press.
-;            The vote will be calculate and print out the the winning party with vote count.
-;            Authors: PK, ML, JS, AZ
+; 2022-05-12 adding task managers för parti 0, TODO add conviction score and several tests (new method calls) (Arian Shaafi and Christian Sjösvärd)(Class setupvoters
+; 2022-05-12 Added new file electionday for calculating election result stored in global variable resultlist with borda count. (Isac Pettersson, Christian Heisterkamp)
+; 2022-05-18 Major revision of 'perceiving-environment' and proactive part, gks
+; 2022-05-18 Added include file 'municipality.nls' and breeds for municipalities, gks
 ; ************ INCLUDED FILES *****************
 __includes [
-  "bdimod.nls" ; modified version that allows certain intentions to pass values along
-  "communication.nls"
-  "setupvoters.nls"
-  "proactive.nls"
-  "polattitude.nls"
-  "campaign.nls"
-  "electionday.nls"
+    "bdimod.nls" ; modified version that allows certain intentions to pass values along
+    "communicationmod.nls"
+    "setupvoters.nls"
+    "proactive.nls"
+    "polattitude.nls"
+    "electionday.nls"
+    "municipality.nls"
+  ;
+  ;
+
 ]
 ; ********************end included files ********
 
 ; ************ EXTENSIONS *****************
 extensions [
-  ; vid ; used for recording of the simulation
-  array
-  table
+; vid ; used for recording of the simulation
+array
+table
+matrix ;added by gks 2022-05-14
 ]
 ; ********************end extensions ********
 
@@ -57,6 +60,7 @@ extensions [
 ; ************ BREEDS OF TURTLES *****************
 breed [voters voter]  ;
 breed [broadcasters broadcaster] ;
+breed [municipalities municipality]
 ; ********************end breed of turtles ********
 
 
@@ -80,6 +84,16 @@ globals [
   numAgentRegion3
 
   randomBroadcast
+
+  ; for the election results of the borda count
+  resultlist
+
+  ; for different debugging flags
+  debug-general
+
+  debug-setup-pol-attitude
+  debug-update-pol-attitude
+  debug-update-conv-plane
 ]
 
 ; ******************end global variables ***********
@@ -105,9 +119,10 @@ voters-own [
   region
   current_pol_attitude ; holds x and y values of attitude plane
   current_pol_ranking  ; Holds x cordinate for the 3 highest ranked
-  current_pol_array    ; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
-  pol_tbl              ; table for the political plane with key "x y"
-  conv_tbl             ; table for the political conviction, with same key "x y"
+  current_pol_array; array as current_pol_attitude. item 0= X, item 1=Y, item 3 = conv
+  pol_tbl ; table for the political plane with key "x y"
+  conv_tbl ; table for the political conviction, with same key "x y"
+  conviction-plane; matrix of conviction plane, added by gks 2022-05-22
 
   ; Campaign variables
   politicalCampaignManager ; True or false if the agent is a manager for a political campaign.
@@ -115,6 +130,11 @@ voters-own [
   campaignPolAttitude ; The political attitude for the campaign.
   campaignCandidates ; List of candidates that are participating in the campaign
   possibleCandidates ; Temporary list of agents that are proposing to be part of the campaign.
+  ]
+
+
+municipalities-own [
+  region
 ]
 ; *********************end agent-specific variables *************
 
@@ -126,7 +146,13 @@ patches-own [meaning]
 ;
 to setup
   clear-all
-  ; set-up things
+  ; set-up things, added by gks 2022-05-16
+  set debug-general true
+  set debug-setup-pol-attitude false
+  set debug-update-pol-attitude false
+  set debug-update-conv-plane false
+  ; -- set up debug flags
+
   ;  -- set up time
   set flagNewDay false
   set flagNewWeek false
@@ -137,23 +163,37 @@ to setup
   set attitude_cols 5
 
   create-broadcasters 1
+  ask broadcaster 0
+  [
+    set intentions []
+    set beliefs []
+    set incoming-queue []
+    set shape "circle" ;
+    set size 1
+    set color yellow
+    setxy 33 15
+    set label "MASS MEDIA"
+  ]
+
+
+  ; resultlist for borda count
+  set resultlist (list 0 0 0 0 0)
+
   ; Create the regions
   setup-regions
 
+   ; Create the municipalites
+  setup-municipalities
+
   ; Create and setup voters (functions included in 'setupvoters.nls'
-        ; set the regions of the agents
-        ; creation and setup of agents
-        setup-voters
+  ; creation and setup of agents
+  setup-voters
   ; --- end create and setup voters
 
 
-
-  ;
-  ask voters [ ;TODO: replace by a dedicated voter with highest conviction of his or her political attitude!
-  set friendsList (list 5 6 7 8 9 10 11) ; <-- test, should already have a friendsList or not?
-  add-intention (word "call-for-campaign-friends") "true"
-  ]
-
+  ; find political campaign manager(s)
+  ;ask voters [setup-campaign-manager]
+  setup-campaign-manager
   ; must be last in the setup-part:
   reset-ticks
   setup-plots
@@ -185,12 +225,34 @@ to go
   set old_month month
   set old_year year
 
+  ; Timely events outside of voter-agents
+  ; - Broadcaster
+  ; - Destiny
+  ; - Municipality
+
+  ; Broadcaster
   ; Sending political messages to random selection of agents
-  ;if flagNewDay [broadcasting]
+  if flagNewDay [
+    clear-links
+    broadcasting
+    wait 0.1
+    clear-links
+  ]
 
-  ; Changing the status of some random unemployed adults to employed
+  ; Destiny
+  if flagNewMonth [
+  ; Changing the status of some random adults to from employed to unemployed
 
-  ; Changing the status of some random employed adults to employed
+
+  ]
+
+  ; Destiny & Municipality
+  if flagNewYear [
+  ; Changing the status of some random adults to from employed to unemployed
+
+    ask municipalities [serve-the-people]
+
+  ]
 
   ;-----End Outside-Observer ---
 
@@ -203,22 +265,21 @@ to go
   ask voters [
     process-messages ; process messages in the message-queue.
     perceive-environment ; updates beliefs about the environment
-
     ; Execute all of the intentions on the intention-stack as reactive behaviors
     while [not empty? intentions] [execute-intentions] ; while loop that executes all of the intentions on the stack
     proactive-behavior ; finite state machine for the proactive behavior
   ]
+
+
+
+  ; show/hide things
   clear-links
 
-  ask voters[
-    set color white
-  ]
-  ask one-of voters [ update-date ]
   ;----- End Agents to-go part ----------------------------------------
   ;
   tick
 
-  ; show/hide things
+
 end
 ;************************end to go/starting part ***********
 
@@ -227,204 +288,239 @@ end
 to broadcasting
   let receivers ([who] of voters with [age > 17]) ; determines all the possible receivers
   let n length receivers
+  let procent 90 ; procent of voters to be reached by mass media
+  let nr floor (n * procent / 100)
 
   ask broadcasters [
-let receiver n-of n receivers
+    let receiver n-of nr receivers ;
     ;print receiver
     let informMsg create-message "inform"
     ;set informMsg add-receiver voters informMsg
     ;set informMsg add-receiver receiver informMsg
     set informMsg add-multiple-receivers receiver informMsg
-    set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
-    print informMsg
-    send informMsg
+    ;;;set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
+    ;;set informMsg add-content (list "pol_attitude" (list random 5 1)) informMsg ;experimenting with y
+    set informMsg add-content (list "pol_attitude" (list random 5 random 3)) informMsg
+    ;simulating take-over public media - gks, 2022-05-13
+;    set informMsg add-content (list "pol_attitude" (list 4 random 3)) informMsg
+   ;set informMsg add-content (list "pol_attitude" (list random 2 0)) informMsg
+    ;print word "Broadcasting msg: " informMsg
+    send informMsg ; broadcaster needs to send out directly since it has not a handling of intention-stack
   ]
-end
-;Task 8.1
-to send-current-pol-att
-    let informMsg create-message "inform"
-    set informMsg add-multiple-receivers friendsList informMsg
-    set informMsg add-content (list "pol_attitude" current_pol_attitude) informMsg
-    print informMsg
-    add-intention "send" informMsg
-    execute-intentions
 end
 
-to update-date
-  if flagNewDay [
-    print "New Day!"
-  ]
-  if flagNewWeek [
-    print "New Week!"
-  ]
-  if flagNewMonth [
-    print "New Month!"
-  ]
-  if flagNewYear [
-    print "New Year!"
-  ]
-end
+
 
 to process-messages
-; reads and interprets all the messages on the message-queue (might need a while-loop)
+; reads and interprets all the messages on the message-queue
   ; -> updates beliefs and variables
   ; -> adds intentions (=reactive procedures) onto the intention stack
+  ;OBS: may not activate own functions!
 
-  ; political attitude plane part:
-  ; Logic for adding incoming conviction value into the our current agent
-  ; conviction queue for later processing. This is required because the
-  ; intention stack cannot store data.
+  let performative ""
+  let type-content ""
+  let msgcontent ""
+  let msg ""
 
-  while [get-message-no-remove != "no_message"]
-  [
-    let msg get-message
-    ifelse get-performative msg = "inform"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "pol_attitude"
-      [
-        let xyz item 1 get-content msg
-        add-intention (word "process_message " item 0 xyz " " item 1 xyz) "true"
-      ]
-      [
-      ifelse type-content = "removed-from-list"
-      [
-        let friend-id get-sender msg
-        add-intention (word "remove-friend " friend-id ) "true"
-      ]
-      [
-      ; ... else another type-content
-      ]
-      ]
-    ][
-    ifelse get-performative msg = "request"
-    [
-     let type-content item 0 get-content msg
-     ifelse type-content = "friend-request"
-     [
-       let friend-id get-sender msg
-       let xyz item 1 get-content msg
-       add-intention (word "add-friend " friend-id " " xyz) "true"
-     ]
-     [
-     ; ... else another type-content
-     ]
-    ]
-    [
-    ifelse get-performative msg = "agree"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "friend-request"
-      [
-          ;"Agreed friend request"
-      ]
-      [
-        ; ... else another type-content
-      ]
-      ]
-    [
-    ifelse get-performative msg = "cancel"
-    [
-      let type-content item 0 get-content msg
-      ifelse type-content = "friend-request"
-      [
-      ; print "Cancelled friend request"
-      ]
-      [
-      ; .. else another type-content
-      ]
-    ]
-   [
-    ifelse get-performative msg = "cfp"
-    [
-    let type-content item 0 get-content msg
-    ifelse type-content = "political_campaign"
-    [
-      let manager-id get-sender msg
-      let xyz item 1 get-content msg
-      add-intention (word "handle-cfp-campaign " manager-id " " xyz) "true"
-    ]
-    [
-     ; ... else another type-content
-    ]
-    ]
-    [
-    ifelse get-performative msg = "propose"
-    [
+  while [get-message-no-remove != "no_message"] [
+    ; read the message
+    set msg get-message
+    ; read the performative, type and content of the message
+    set performative  get-performative msg
+    set type-content item 0 get-content msg
 
-      let canditate-id get-sender msg
-      let xyz item 1 get-content msg
-      set possibleCandidates lput (list canditate-id xyz) possibleCandidates
-    ]
-    [
-    ifelse get-performative msg = "refuse"
-    [
-    ; ... Rejecting contractor
-      ;print "reject-proposal!!!"
-    ]
-    [
-    ifelse get-performative msg = "accept"
-    [
-    let type-content item 0 get-content msg
-    ifelse type-content = "political_campaign"
-    [
-    set politicalCampaignManagerId item 0 get-content msg
-    set campaignPolAttitude item 1 get-content msg
-    add-belief create-belief "campaign-flag" true
-    ]
-    [
-    ; ... else another type-content
-    ]
-    ]
-    [ ]
-    ]
-    ]
-    ]
-   ]
-   ]
-   ]
-   ]
-  ]
+    ; switch case on performatives and content, see https://stackoverflow.com/questions/69605859/how-do-i-do-a-switch-or-select-case-in-netlogo
+    (ifelse
+      (performative = "inform") [
+        (ifelse
+          (type-content = "pol_attitude") [
+                let xyz item 1 get-content msg
+                add-intention (word "process_message " item 0 xyz " " item 1 xyz) "true"]
+          (type-content = "removed-from-list")[
+                let friend-id get-sender msg
+                add-intention (word "remove-friend " friend-id ) "true"]
+          [])
+      ]
+      (performative = "request") [
+        if type-content = "friend-request" [
+          let friend-id get-sender msg
+          let xyz item 1 get-content msg
+          add-intention (word "add-friend " friend-id " " xyz) "true"]
+      ]
+      (performative = "agree") [
+         if type-content = "friend-request" [
+          print "TODO:"]
+      ]
+      (performative = "cancel") [
+         if type-content = "friend-request" [
+         print "TODO:" ]
+      ]
+      (performative = "cfp") [
+         if type-content = "political_campaign" [
+            let manager-id get-sender msg
+            let xyz item 1 get-content msg
+            add-intention (word "handle-cfp-campaign " manager-id " " xyz) "true"
+          ]
+      ]
+      (performative = "propose") [
+         let canditate-id get-sender msg
+         let xyz item 1 get-content msg
+         set possibleCandidates lput (list canditate-id xyz) possibleCandidates
+         ]
+      (performative = "refuse") [print "TODO:"  ]
+      (performative = "accept") [
+         if type-content = "political_campaign" [
+           set politicalCampaignManagerId item 0 get-content msg
+           set campaignPolAttitude item 1 get-content msg
+           add-belief create-belief "campaign-flag" true
+         ]
+       ]
 
-  let conviction_queue (list [])
-  if exist-beliefs-of-type "incoming-conviction"
-  [set conviction_queue beliefs-of-type "incoming-conviction"]
-  let last_index length conviction_queue
-
-  add-belief create-belief "incoming-conviction" conviction_queue
-  ;add-intention "react-heatmap" "heatmap-eval"
-
-  if flagNewMonth[
-    add-intention "update-pol-attitude" "true"
-  ]
-
-
-   ; <--- put intention-stack.
-  ;--end political attitude plane part.
+      [print "default of switch-case" ]
+    )
+   ] ; closing while-loop
 
 end
 
 to perceive-environment
   ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
 
-  ; Update current_status in your code.
-  ; set flagEmployed true ; update this to true or false in your code.
 
+  ;Perceiving time --------------
 
-  ; if changed status, set new current state
-  ; call proactive-behavior
-
-
-
-  ; proactive behavior testing part:
   if flagNewDay [
-    broadcasting
+    ;print "New Day!"
   ]
 
   if flagNewWeek [
-    ;send-current-pol-att to friends
-    send-current-pol-att
-   ; update-pol-attitude
+    ;print "New Week!"
+    ;TODO: put function for reconsidering members in their network on the intention stack
+  ]
+
+  if flagNewMonth[
+    add-intention "update-pol-attitude" "true"
+  ]
+
+  if flagNewYear [	
+    ;print "New Year!"	
+
+    ; increase the age of the voter
+    ; set age age + 1  ; not activated until agents can die and be born
+
+    ; Increase job wage, if status is adult and not employed.	
+    if flagEmployed [	
+      set old_wage wage	
+      let yearly_increase random-float 0.08	
+      set yearly_increase yearly_increase + 1	
+      set wage wage * yearly_increase	
+    ]
+  ]
+
+
+  ; Determine changes in current_state dependent on beliefs
+  let next_state current_state
+  (ifelse
+    (current_state = "initialState")[
+      (ifelse
+        (age < 18) [
+          set current_status "child"
+          set next_state [-> schooling]
+        ]
+        (age > 17 and flagEmployed) [
+          set current_status "adult"
+          set next_state [-> has-a-job]
+        ]
+        (age > 17 and not flagEmployed) [
+         set current_status "adult"
+         set next_state [-> has-no-job]
+        ]
+        (age > 83 ) [
+         set current_status "elderly"
+         set next_state [-> at-elderly-home]
+        ]
+        [] ;default for age
+      )
+    ]
+    (current_state = "schooling")[
+      if age > 17 [
+        set current_status "adult"
+        set next_state [-> has-no-job]
+        ]
+      ]
+    (current_state = "has-a-job")[
+      (ifelse
+        (not flagEmployed) [
+          set next_state  [-> has-no-job]
+        ]
+        (false) [;TODO: replace with condition for next state "feel confirmed"
+          set next_state [-> feel-confirmed]
+        ]
+       [] ; default
+      )
+      ]
+    (current_state = "has-no-job")[
+      (ifelse
+        (flagEmployed) [
+          set next_state  [-> has-a-job]
+        ]
+        (true) [;TODO: replace with condition for next state "looks for job"
+          set next_state [-> look-for-jobb]
+        ]
+
+        [] ;default
+      )
+    ]
+
+     (current_state = "look-for-jobb")[
+      if flagEmployed [
+        set next_state [-> has-a-job]
+        ]
+      ]
+
+    (current_state = "feel-confirmed")[
+    (ifelse
+        (levelOfEducation > 0.05 and ( wage / old_wage) > 1.05) [
+          set next_state  [-> gain-status]
+        ]
+        (false) [;TODO: replace with condition for applying for political campaign (received cfp?)
+          ; TODO: put positive answer to campaing manager on intention stack
+        ]
+        (false) [;TODO: replace with condition for accepting participating in political campaign (received confirmation?)
+          ; TODO: put political campaing function on function stack
+        ]
+        (exist-beliefs-of-type "campaign-flag") [;TODO: check this condition for actively participating in political campaign (not finished yet)
+          add-intention "working-for-campaign" "true"
+        ]
+        (false) [;TODO: replace with condition for next state have-friends, for example if completed a campaign
+          set next_state [-> have-friends]
+        ]
+
+        [] ;default
+      )
+    ]
+
+    (current_state = "gain-status")[
+      if false [ ; TODO: replace with condition for becoming campaign manager
+        ; put the function 'lead-campaign' on intention stack
+        ]
+      if false [ ; TODO: replace with condition for continuing being campaign manager, could be current_goal="campaign manager" for example
+        ; put the function 'lead-campaign' on intention stack
+        ]
+      ]
+
+
+    [
+        ; No default
+        ;print word "No case for: " current_state
+    ]
+  )
+  set current_state next_state
+
+
+
+  ;TODO: the following code should be proactive and part of the state machine.
+  ; Remove from here!
+
 
   if politicalCampaignManager = true [
   if possibleCandidates != []
@@ -437,11 +533,12 @@ to perceive-environment
    let msg create-message "accept"
    set msg add-content (list "political_campaign" item 1 index) msg
    set msg add-receiver item 0 index msg
-   send msg
+   ;send msg
+   add-intention (word "send " msg) "true"
    ]
 
    if length possibleCandidates < 3 [
-   add-intention (word "call-for-campaign-friends") "true"
+   add-intention "call-for-campaign-friends" "true"
    ]
 
    set possibleCandidates []
@@ -449,69 +546,16 @@ to perceive-environment
    ;print campaignCandidates
   ]
   ]
-  ]
-  ;Task 8.1
-  if flagNewMonth [
-    add-intention "update-pol-attitude" "true"
-    execute-intentions
-  ]
 
-  if flagNewYear [	
-    ; Increase job wage, if status is adult and not employed.	
-    if flagEmployed [	
-      set old_wage wage	
-      let yearly_increase random-float 0.08	
-      set yearly_increase yearly_increase + 1	
-      set wage wage * yearly_increase	
-    ]
 
     ; Todo "Managern följer utvecklingen av agenternas current_pol_attitude för att se om summan ökar."
     if politicalCampaignManager = true
     [
     ; ... Something here.
     ]
-  ]
+  ;---end remove from here!
 
-
-  ;--end proactive behavior testing part ---
-end
-
-; ... Implemented by other group.
-to add-friend [id pol_attitude]
-print "add-friend"
-print id
-print pol_attitude
-; Implemented by other group.
-end
-
-; ... Implemented by other group.
-to remove-friend [id]
-print "remove-friend"
-; Implemented by other group.
-end
-
-to electionDay
-  let num_of_election_voters round(0.7 * count voters)
-  let parties n-values attitude_cols [i -> list i 0]
-  ask n-of num_of_election_voters voters [
-    let x item 0 current_pol_attitude
-    let current item x parties
-    let index item 0 current
-    let value item 1 current
-    set parties replace-item x parties list index (value + 1)
-  ]
-  let highest 0
-  let win_party [0 0]
-  foreach parties [value ->
-    if item 1 value > highest [
-      set win_party value
-      set highest item 1 value
-    ]
-  ]
-  print (word "parties: " parties)
-  print (word "party " item 0 win_party " won, with " item 1 win_party " votes.")
-end
-
+end ;- perceive-environment
 
 
 
@@ -564,7 +608,7 @@ num-agents
 num-agents
 5
 700
-97.0
+427.0
 1
 1
 NIL
@@ -572,9 +616,9 @@ HORIZONTAL
 
 BUTTON
 4
-10
+39
 67
-43
+72
 setup
 setup
 NIL
@@ -588,10 +632,10 @@ NIL
 1
 
 BUTTON
-138
-13
-201
-46
+140
+40
+203
+73
 go
 go
 T
@@ -748,9 +792,11 @@ Nr voters
 10.0
 true
 false
-"set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5"
+"set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 4\nset-histogram-num-bars 5" "set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 4\nset-histogram-num-bars 5"
 PENS
-"default" 1.0 1 -16777216 true "histogram [current_pol_attitude] of voters" "histogram [item 0 current_pol_attitude] of voters"
+"region3" 1.0 1 -955883 true "histogram [item 0 current_pol_attitude] of voters with [region = 3]" "histogram [item 0 current_pol_attitude] of voters with [region = 3]"
+"region2" 1.0 1 -10899396 true "histogram [item 0 current_pol_attitude] of voters with [region = 2]" "histogram [item 0 current_pol_attitude] of voters with [region = 2]"
+"region1" 1.0 1 -13345367 true "histogram [item 0 current_pol_attitude] of voters with [region = 1]" "histogram [item 0 current_pol_attitude] of voters with [region = 1]"
 
 PLOT
 5
@@ -768,37 +814,37 @@ true
 false
 "set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 3\nset-histogram-num-bars 5" ""
 PENS
-"default" 1.0 1 -2674135 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5" "histogram [array:item current_pol_array 0] of voters"
-
-MONITOR
-77
-41
-134
-86
-Days
-day
-17
-1
-11
+"default" 1.0 1 -16777216 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5\nhistogram [item 0 current_pol_attitude] of voters with [age > 17]" ""
 
 SWITCH
-6
-584
-122
-617
-show_lines
-show_lines
+1
+589
+128
+622
+show_beliefs
+show_beliefs
 1
 1
 -1000
 
+SWITCH
+3
+639
+119
+672
+show_lines
+show_lines
+0
+1
+-1000
+
 BUTTON
-53
-61
-149
-94
-NIL
-electionDay
+78
+68
+133
+101
+Election
+calculate-result
 NIL
 1
 T

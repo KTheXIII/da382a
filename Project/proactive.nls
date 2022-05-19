@@ -11,48 +11,25 @@
 
 
 
-; Sets initial state.
-to setup-initialState
-  (ifelse
-    current_status = "child" [
-      set current_state [ -> schooling]
-    ]
-    current_status = "adult" and flagEmployed [
-      set current_state [ -> has-a-job ]
-    ]
-    current_status = "adult" and not flagEmployed [
-      set current_state [-> has-no-job ]
-    ]
-    current_status = "elderly" [
-        set current_state [-> at-elderly-home]
-    ][
-        ; No default
-    ])
-end
-
-
-; exists-belief
+; Runs the current state
 to proactive-behavior  
-  if exist-beliefs-of-type "campaign-flag" [
-    set current_state [ -> working-for-campaign ] ;kanske läggas på intention stack
-  ]
-  
-  run current_state
+; nothin else here but 'run current_state' ! 
+run current_state
 end
 
 ; Definition of the states 
 
 ; -- State for the working agents --
 to working-for-campaign
+  print "Working for campaign"
+  
   ;Subtask 2: Send political message to friends
   let msg create-message "inform"
   set msg add-content (list "pol-attitude" campaignPolAttitude) msg
   set msg add-multiple-receivers friendsList msg
-  send msg ; Intention stack maybe?
-  
-  
-  ;Task 4 maybe?
-  
+  ;add-intention (word "send " msg) "true" ;
+  add-intention "send " msg
+
 end
 
 ; -- For process messages --
@@ -61,7 +38,8 @@ to call-for-campaign-friends
   let cfpMsg create-message "cfp"
   set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-multiple-receivers friendsList cfpMsg
-  send cfpMsg
+  ;add-intention (word "send " cfpMsg) "true"
+  add-intention "send" cfpMsg
 end
 
 to handle-cfp-campaign [managerid pol_attitude]
@@ -71,26 +49,28 @@ to handle-cfp-campaign [managerid pol_attitude]
   let cfpMsg create-message "propose"
   set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-receiver managerid cfpMsg
-  send cfpMsg
+  ;add-intention (word "send " cfpMsg) "true"
+  add-intention "send " cfpMsg
  ]
  [
   ; Decline
   let cfpMsg create-message "refuse"
   set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-receiver managerid cfpMsg
-  send cfpMsg
+  ;add-intention (word "send " cfpMsg) "true"
+  add-intention "send " cfpMsg
  ]
 end
 
 ; -- Children  --
 to schooling
-  print "Schooling state"
-  print "Understand the world surronding!"
+  ;print "Schooling state"
+  ;print "Understand the world surronding!"
 end
 
 ; -- Adults --
 to has-a-job
-  print "Has a job!"
+  ;print "Has a job!"
   if not flagEmployed [
     set current_state [ -> has-no-job ]
   ]
@@ -98,23 +78,19 @@ end
 
 ; Adult, do not have a job. 
 to has-no-job
-  ;print "Applying for jobs"
-  if flagEmployed
-  [set current_state [ -> has-a-job ]]
-  
-  ; Update this 
-  ;if conditions for feel-confirmed.
-  ;[]
+  ; print 'unemployed'
 end
 
 to feel-confirmed
-  ;let tmp_advance-in-career true ; just a for testing... check: education-level='PoG' and increase(old_BW,BW) > 5%  
-  if levelOfEducation > 0.05 and ( wage / old_wage) > 1.05 [
-    set current_state [-> gain-status]
-  ]
+   ;
+end
+
+to look-for-jobb
+end
+
+
+to lead-campaign
   
-  ; if conditions for "have-friends state"
-  ;[]
 end
 
 to gain-status
@@ -134,3 +110,20 @@ end
 to at-elderly-home
   print "At elderly home!"
 end
+
+
+; ... Implemented by other group.
+to add-friend [id pol_attitude]
+;print "add-friend"
+;print id
+;print pol_attitude
+; Implemented by other group.
+end
+
+; ... Implemented by other group.
+to remove-friend [id]
+;print "remove-friend"
+; Implemented by other group.
+end
+;--- end remove from here!
+

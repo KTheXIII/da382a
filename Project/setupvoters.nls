@@ -11,6 +11,7 @@
 ;            Authors: Isac Petterson (IP), Johan Skäremo (JS), Ademir Zjajo (AZ), Christian Heisterkamp (CH)
 ; 2022-04-21 Added setup-heatmap call in setup-voter function Authors: Eric Lundin, Pratchaya Khansomboon.
 ; 2022-04-27 heatmap functions moved to polattitude.nls (gks)
+; 2022-05-12 adding task managers för parti 0, TODO add conviction score and several tests (new method calls) (Arian Shaafi and Christian Sjösvärd)
 ;
 ;---------------------------------------------------
 
@@ -49,18 +50,19 @@ to setup-regions
   ask patch 4 31 [set plabel "Region3"]
   ;Region2
   ask patches with [pxcor >= 0 and pxcor <= 66 and pycor >= 11 and pycor <= 21]
-  [set pcolor green
+  [set pcolor lime
    set meaning "region 2" ]
   ask patch 4 20 [set plabel "Region2"]
   ;upperclass
   ask patches with [pxcor >= 0 and pxcor <= 66 and pycor >= 0 and pycor <= 10]
-  [set pcolor blue
+  [set pcolor sky
    set meaning "region 1" ]
   ask patch 4 9 [set plabel "Region1"]
 end
 
 
 ;--- End setup of the model and of the regions ---------------------------
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SETUP OF THE VOTER AGENTS
@@ -96,23 +98,30 @@ to setup-voters
     set possibleCandidates []
     set campaignCandidates []
     set politicalCampaignManager false
-    setup-pol-attitude
+    ;setup-pol-attitude ; changed by gks, 2022-05-14 comes too early here, the voters need a setup of education level
     
     ;temporary test-code for proactive behavior
     ; Initial status and state
-    set current_status "adult"
+    ;;;?set current_status "adult"
     set flagEmployed false
-    setup-initialState
+    ;setup-initialState
+    set current_state "initialState"
     ;--end temporary test-code
+    
+   
    ] ; end create voter-agents
   
   ; populate the regions with voters
   populateRegions
   setup-agentAge
   setup-educationLevel
+   ; Define the political planes and message planes, etc
+  ask voters [setup-pol-attitude] ;changed by gks, 2022-05-14
+  setup-employment
   setup-monthlyWage
   setup-familyList
-  
+   ; test to fill friendsList
+  ask voters [fill-friendList]
 end
 
 
@@ -218,7 +227,7 @@ to setup-educationLevel
   ask n-of round(numAgentRegion1 * (0.24)) voters with [(levelOfEducation = -1) and (region = 1)]
                                                        [set levelOfEducation 3]
   ask voters with [(levelOfEducation = -1) and (region = 1)]
-                                                       [set levelOfEducation random(3)]
+                                                       [set levelOfEducation random(3) + 1] ;gks, 2022-05-14
   
   
    ;Region 2
@@ -232,7 +241,7 @@ to setup-educationLevel
   ask n-of round(numAgentRegion2 * (0.27)) voters with [(levelOfEducation = -1) and (region = 2)]
                                                        [set levelOfEducation 3]
   ask voters with [(levelOfEducation = -1) and (region = 2)]
-                                                       [set levelOfEducation random(3)]
+                                                       [set levelOfEducation random(3)  + 1] ;gks, 2022-05-14
   
   ;Region 3
    ;PrG (=1) 5%
@@ -245,7 +254,7 @@ to setup-educationLevel
   ask n-of round(numAgentRegion3 * (0.70)) voters with [(levelOfEducation = -1) and (region = 3)]
                                                        [set levelOfEducation 3]
   ask voters with [(levelOfEducation = -1) and (region = 3)]
-                                                       [set levelOfEducation random(3)]
+                                                       [set levelOfEducation random(3)  + 1] ;gks, 2022-05-14
   
   
   ; trying to verify the distribution for debugging
@@ -254,6 +263,16 @@ to setup-educationLevel
   ;ask voters with [region = 3] [print word "region 3, level of education = " levelOfEducation]
   
 end
+
+;TODO:
+to setup-employment
+; see point 7) on pg 24 in the project description
+; dummy function that sets all the agents to employed
+  ask voters [
+    set flagEmployed true
+  ]
+end
+
 
 to setup-monthlyWage
   ;Region 1
@@ -318,4 +337,46 @@ to setup-familyList
     set familyList fmList
   ] 
   
+end
+
+to setup-campaign-manager 
+  ; finding the voter age >17 with the currently highest conviction for left democratic party
+  let polManagerSet voters with [age > 17 and item 0 current_pol_attitude = 0 and item 1 current_pol_attitude = 0 ]
+  let politicalCM max-one-of polManagerSet [matrix:get conviction-plane 0 0]
+  ;debug print
+  print (word "politicalCampaignManager found" politicalCM )
+  if politicalCM != nobody [
+   ask politicalCM [
+      ;TODO: add the campaign-task on the intention stack instead!
+      add-intention "call-for-campaign-friends" "true"   
+      set politicalCampaignManager true
+      set politicalCampaignManagerId who
+      print "The Manager"
+      set size 2
+      set color red
+    ]
+    
+  
+  ]  
+end 
+
+
+;preliminary, should be replaced with proactive method later
+to fill-friendList
+  ; find n friends in a cone
+  let n 5 + random 6
+  let nFriends 0
+  let dist 1
+  let angle 30
+  let friends []
+  while [nFriends < n][
+      set friends voters in-cone dist angle
+      set nFriends (count friends)
+      set dist dist + 1
+      set angle angle + 1
+    ]
+  set friendsList [who] of friends ; sort always returns a list
+  set friendsList remove who friendsList; remove the own id
+  ;debug-print
+  ;print (word "Ag: " who "FriendsList= " friendsList ", nFriends= " nFriends ", dist=" dist ", angle= " angle ", n= " n )
 end

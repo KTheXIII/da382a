@@ -30,14 +30,13 @@
 to send [msg]
   let recipients get-receivers msg
   let recv 0
-  let sender get-sender msg
   foreach recipients [i ->
    set recv turtle (read-from-string i)
    if recv != nobody [without-interruption [ask recv [receive msg]]] ;; read-from-string is required to convert the string to number
-    ;Task 11.9
-    if show_lines[
-   if (recv != self) [ create-link-with recv ]
-  ]
+  ;extension to show lines between sender and receiver by means of created links
+  ;the links need to be cleared in the observer
+  if show_lines[
+      if (recv != self) [ create-link-with recv ] ]
   ]
 end
 

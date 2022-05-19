@@ -24,6 +24,7 @@
 ; 2022-05-05 Remove alternative heatmap. Added utility function matrix create EL. Added Utility function matrix-insert Isac Pettersson(IP), 
 ;            Added Utility function matrix-query IP, rewrite setup-pol-attitude to function with the new message-matrix and conviction-matrix EL,
 ;            Function for updating the new message-matrix and conviction-matrix according to class discussion update-pol-attitude LM,
+; 2022-05-12 Function update_ranking, by ???
 ;       
 ;
 ;
@@ -49,8 +50,12 @@ to setup-pol-attitude
 
   let max_heat 10
 
-  let conviction-plane matrix_create rows cols 1
-  let message-plane matrix_create rows cols 0
+  ; set all of the fields as low as possible - gks, 2022-05-13
+  ;let conviction-plane matrix_create rows cols 1
+  ;let conviction-plane matrix_create rows cols 0.01 ;changed by gks to use matrix extension instead
+  set conviction-plane matrix:make-constant rows cols 0.01
+  
+  let message-plane matrix_create rows cols 0 
 
   let polVal  random(100)
   let polIndex 0
@@ -61,13 +66,26 @@ to setup-pol-attitude
   if tier3 < polVal and polVal < tier4 [set polIndex 3]
   if tier4 < polVal and polVal < tier5 [set polIndex 4]
     
-  array:set conviction-plane (1 * cols + polIndex) 2
+  ;array:set conviction-plane (1 * cols + polIndex) 2 ;changed by gks 2022-05-14
   
-  add-belief create-belief "message-plane" message-plane
-  add-belief create-belief "conviction-plane" conviction-plane
+  ; adapt to distinguish different convictions in the conviction plane - gks, 2022-05-13
+  
   let x (polindex mod attitude_cols)
   let y floor(polindex / attitude_cols)
   set current_pol_attitude list x y
+  
+  if debug-setup-pol-attitude [print (word "agent: " who " curr_pol-x: " x ", y:" y ", levelOfEducation:" levelOfEducation)]
+  
+  ; update the conviction-plane with the conviction plane, current x y and the intital value = levelOfEducation
+  set conviction-plane update-conv-plane conviction-plane current_pol_attitude levelOfEducation
+  if debug-setup-pol-attitude [print (word "Ag: " who " has conviction plane: " matrix:pretty-print-text conviction-plane)]
+  
+  
+  add-belief create-belief "message-plane" message-plane
+  add-belief create-belief "conviction-plane" conviction-plane
+  ;let x (polindex mod attitude_cols)
+  ;let y floor(polindex / attitude_cols)
+  ;set current_pol_attitude list x y
   set current_pol_ranking [0 0 0]
 end
 
@@ -76,52 +94,141 @@ end
 ; as well as updating your conviction plane
 ; THIS WILL ALSO UPDATE current_pol_attitude
 to update-pol-attitude
-  let conviction-plane (item 1 (item 0 beliefs-of-type "conviction-plane"))
+  ;let conviction-plane (item 1 (item 0 beliefs-of-type "attitude-plane"))
+;  set conviction-plane (item 1 (item 0 beliefs-of-type "conviction-plane")) ;changed by gks 2022-05-16
   let message-plane (item 1 (item 0 beliefs-of-type "message-plane"))
+  
+  ; transforming the matrix conviction-plane from matrix to array, added by gks 2022-05-14
+  let conviction-plane-array []
+  let a matrix:to-row-list conviction-plane
+  foreach a
+  [ [i] -> foreach i
+    [ [m] -> set conviction-plane-array lput m conviction-plane-array
+    ]
+  ]
+  set conviction-plane-array array:from-list conviction-plane-array ; making the list an array
+  if debug-update-pol-attitude [print (word "update-pol-attitude of ag:" who "conviction-plane-array= " conviction-plane-array)]
+  if debug-update-pol-attitude [print (word "update-pol-attitude of ag:" who "conviction-plane-array= " conviction-plane-array "message-plane: " message-plane)]
+  if debug-update-pol-attitude [print word "with current_pol_attitude: " current_pol_attitude]
+ ;--end
+  
+  
   
   let x (item 0 current_pol_attitude)
   let y (item 1 current_pol_attitude)
   let current_pol_index y * attitude_cols + x
   
+  ; added by gks, 2022-05-16: requirements for updating the pol-attitude:
+  ;- nr of message att current_pol_index may not be '0'
+  ;- a minimum number of messages should be present in the message plane, för eample sqrt(attitude_cols * attitude_rows) =>4
+  let s 0
+  let m 0
+  foreach (n-values (attitude_cols * attitude_rows) [i -> i])[
+    index -> set s (s + (array:item message-plane index))]
+    set m array:item message-plane current_pol_index
+  ;if (m = 0) or s < 4 [
+  if s < 4 [
+    ;debug-print
+    if debug-update-pol-attitude [print (word "ag: " who ", update-pol stpped ->current_pol_index: " current_pol_index)]
+    if debug-update-pol-attitude [print (word "conditions not met: m= " m ", s= " s)]
+    if debug-update-pol-attitude [print message-plane]
+    stop]; exit if the conditions are not met
+  if debug-update-pol-attitude [print (word "ag: " who ", updated->current_pol_index: " current_pol_index)]
+  if debug-update-pol-attitude [print (word "conditions met: m= " m ", s= " s)]
+  ;
+  ;-----------------------
+  
+  ;devug-print
+  if debug-update-pol-attitude [print (word "agent: " who ", with current_pol_index: " current_pol_index)]
+  
   let current_max_w 0
   let current_max_w_index 0
   
   ; calculate a sum of message * attitude
-  let matrix_sum 0.0000001
+  let matrix_sum 0.000001
   foreach (n-values (attitude_cols * attitude_rows) [i -> i])[
     index -> 
-       set matrix_sum (matrix_sum + (array:item conviction-plane index) * (array:item message-plane index))
+       ;set matrix_sum (matrix_sum + (array:item conviction-plane index) * (array:item message-plane index)); replaced by gks
+       set matrix_sum (matrix_sum + (array:item conviction-plane-array index) * (array:item message-plane index)) ; changed by gks as a matrix function, 2022-05-14   
   ]
   
   ; calculate the bigges W_max
+  ;print (word "message-plane: " message-plane)
+  ;print (word "conviction-plane: " matrix:pretty-print-text conviction-plane)
   let current_W 0
    foreach (n-values (attitude_cols * attitude_rows) [i -> i])[
     index -> 
-       set current_W (((array:item conviction-plane index) * (array:item message-plane index)) / matrix_sum)
-        array:set message-plane index 0
+       ;set current_W (((array:item conviction-plane index) * (array:item message-plane index)) / matrix_sum) ;replaced by next line, gks
+       set current_W (((array:item conviction-plane-array index) * (array:item message-plane index)) / matrix_sum)
+       
+       ;adaptation of gks, 2022-05-16
+       ; the number of messages is set to 0 with the exception of the index belonging to the current pol attitude. Since this current_pol_index has not
+       ; been determined yet, it cannot be handled here yet
+       ;array:set message-plane index 0 ;;test gks 22-05-15 1 eller current_W istället för 0
        if (current_W > current_max_w) [
           set current_max_w current_W
           set current_max_w_index index
+      
     ]
   ]
   
-  array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + levelOfEducation)
+  ;debug-print
+  if debug-update-pol-attitude [print (word "current_max_w: " current_max_w " index: " current_max_w_index)]
+  
+ ; array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + levelOfEducation) -- adapted by gks, 2022-05-13
+  ; limiting the max value of the conviction value
+  ;;let current_conv array:item conviction-plane current_max_w_index + (levelOfEducation / 10)
+  let current_conv array:item conviction-plane-array current_max_w_index + (levelOfEducation / 6)
+  set current_conv min(list current_conv 500)
+  ;;array:set conviction-plane current_max_w_index current_conv
+  array:set conviction-plane-array current_max_w_index current_conv
+  ;array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + (levelOfEducation / 10)) -- old code, gks
   
   if (current_max_w_index != current_pol_index) [
-    ; current oplitical attitude changed
-    array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + array:item conviction-plane current_pol_index)
+    
+    ;array:set conviction-plane current_max_w_index ((array:item conviction-plane current_max_w_index) + array:item conviction-plane current_pol_index) -- old code, include a limit -- gks
+    ;;;set current_conv ((array:item conviction-plane current_max_w_index) + array:item conviction-plane current_pol_index)
+    set current_conv ((array:item conviction-plane-array current_max_w_index) + array:item conviction-plane-array current_pol_index)
+    set current_conv min(list current_conv 500)
+    ;;;array:set conviction-plane current_max_w_index current_conv
+    
     
     set x (current_max_w_index mod attitude_cols)
     set y floor(current_max_w_index / attitude_cols)
+    ;debug-print gks, 2022-05-14
+    if debug-update-pol-attitude [print (word "ag " who " changed from: " current_pol_attitude " to [" x " " y "] with current_conv=" current_conv ", age= " age ", education= " levelofeducation ", region= " region)] 
+    if debug-update-pol-attitude [print message-plane]
     set current_pol_attitude list x y
-    ;Task 11.10
-    set color red
+    
+    ; change colors according to political attitude
+    ifelse x < 2 [set color red][ifelse x = 2[set color green][ifelse x = 3 [set color blue][if x = 4 [set color brown] ]]]
+   
+    ; create message to inform the friends about changed current_pol_attitude
     send-current-pol-att
+    
   ]
+   ;added by gks 2022-05-14
+    ; update the conviction-plane with the conviction plane, current x y and the current_conv value
+    set conviction-plane update-conv-plane conviction-plane current_pol_attitude current_conv
+    if debug-update-pol-attitude [print (word "new conv of ag:" who ": conviction-plane= " matrix:pretty-print-text conviction-plane)]
+    if debug-update-pol-attitude [print word "with current_pol_attitude: " current_pol_attitude]
+    ; update the message plane by setting the number of messages to 0 except for the index belonging to the current pol attitude. There the 
+   ; number of messages is set to max (1 nr of messages/3)
+   foreach (n-values (attitude_cols * attitude_rows) [i -> i])[
+    index -> 
+    ;ifelse index = current_max_w_index [array:set message-plane index max(list 1 (array:item message-plane index / 3))][array:set message-plane index 0]
+    ifelse index = current_max_w_index [array:set message-plane index 1][array:set message-plane index 0]
+   ]
+  ;debug-print
+  if debug-update-pol-attitude [print (word "ag: " who ": current_mx_ind= " current_max_w_index ",current_pol_index= " current_pol_index ", current_pol_attitude= " current_pol_attitude)]
+  if debug-update-pol-attitude [print word "msg-plane: " message-plane]
+   ;----------------
+  
    update-belief create-belief "message-plane" message-plane
    update-belief create-belief "conviction-plane" conviction-plane
-   
+  
    update_ranking
+  
 end
 
 ; Function for increasing the current value in the message-plane when message is received.
@@ -133,7 +240,7 @@ to process_message [x y]
 end
 
 to update_ranking
-  let conviction-plane (item 1 (item 0 beliefs-of-type "conviction-plane"))
+  ;let conviction-plane (item 1 (item 0 beliefs-of-type "conviction-plane")) ;gks, conviction-plane is a voter-variable now
   let party-conviction [0 0 0 0 0]
   let current-biggest 0
   let index 0
@@ -142,20 +249,21 @@ to update_ranking
   let i 0
   let j 0
   ; Loop through conviction-plane by collumn
-  while [i < 5][
-    set j 0
-    while [j < 3][
+  while [j < 5][
+    set i 0
+    while [i < 3][
     ; Find the biggest value in each collumn
-      if current-biggest < matrix_query conviction-plane i j [
-        set current-biggest matrix_query conviction-plane i j
+      ;if current-biggest < matrix_query conviction-plane i j [ ; gks, replaced with matrix function get, 'row-i', 'col-j']
+      if current-biggest < matrix:get conviction-plane i j [
+        set current-biggest matrix:get conviction-plane i j
       ]
-      set j (j + 1)
+      set i (i + 1)
     ]
-    ; Store the biggest value of each collumn in party-conviction
-    set party-conviction replace-item i party-conviction current-biggest
+    ; Store the biggest value of each column in party-conviction
+    set party-conviction replace-item j party-conviction current-biggest
     set current-biggest 0
     ; move to next collumn
-    set i (i + 1)
+    set j (j + 1)
   ]
 
   ; Find biggest 3 values and their indexes
@@ -182,6 +290,8 @@ to update_ranking
   ]
 end
 
+
+
 ;------------------------------------------------------------------
 ; UTILLITY FUNCTION FOR HANDLING MATRICES PRETEND THESE ARE PRIVATE
 ;------------------------------------------------------------------
@@ -189,7 +299,8 @@ end
 
 ; Utility function for inserting value into matrix at selected x, y coordinates.
 to matrix_insert [matrix x y value]  
-  let index y * attitude_rows + x
+  ;let index y * attitude_rows + x ; error found by gks, 2022-05-15
+  let index y * attitude_cols + x
   array:set matrix index (value)
 end
 
@@ -203,4 +314,56 @@ to-report matrix_query [matrix x y]
   let index y * attitude_cols + x
   let value array:item matrix index
   report value
+end
+
+;update of conviction plane, gks - 2022-05-14
+to-report update-conv-plane [cvplane curconv value]
+  ; clear the current conviction plane and set all the values to levelOfEducation/6
+  ;reset to initial value
+  let nrow item 0 matrix:dimensions cvplane
+  let ncol item 1 matrix:dimensions cvplane
+  set cvplane matrix:times cvplane 0
+  let v value / 6
+  set cvplane matrix:plus-scalar cvplane v
+
+  ;insert the actual value at the curconv-position 
+  let x item 0 curconv ;== columns in conv-plane
+  let y item 1 curconv ;== rows in conv-plane
+  ; set the actual current conviction with the value
+  matrix:set cvplane y x value
+  
+  ;insert the surrounding fields in the plane to 60% of value/levelOfEducation
+  let neighbvalue 0.6 * (value / levelOfEducation)  
+  ;if the value is max (=500) than the neighbvalues are set to 100
+  if value = 500 [set neighbvalue 100]
+  ;position to the left
+  let xx x - 1
+  if xx >= 0 [matrix:set cvplane y xx neighbvalue] ;only set this value if it is not the most left position
+  ;position to the right
+  set xx x + 1
+  if xx < 5 [matrix:set cvplane y xx neighbvalue] ;only set this value if it is not the most right position
+  ;position above
+  let yy y - 1
+  if yy >= 0 [matrix:set cvplane yy x neighbvalue]
+  ;position below
+  set yy y + 1
+  if yy < 3 [matrix:set cvplane yy x neighbvalue]
+  
+  ;conviction plane updated
+  ; debug-print
+  ;;;print (word "Ag: " who " has conviction plane: " matrix:pretty-print-text cvplane)
+  
+  report cvplane
+  
+end
+
+;send message to friendList regarding change of current_pol_attitude
+to send-current-pol-att
+    let informMsg create-message "inform"
+    set informMsg add-multiple-receivers friendsList informMsg
+    set informMsg add-content (list "pol_attitude" current_pol_attitude) informMsg
+    ;print (word "Ag: " who " - Messages sent to friend list: " informMsg)
+    ;add-intention (word "send " informMsg) "true"
+    ;add-intention "send " informMsg
+    send informMsg
 end

@@ -6,7 +6,7 @@
 ; 2022-05-12 Added borda count calculation procedure (to calculate-result).
 ;            Should be called when every voteres current_pol_ranking 
 ;            should be put together using borda count. Not displayed
-;            in heistogram YET.
+;            in histogram YET.
 ;            Authors: Christian Heisterkamp (CH), Isac Pettersson (IP)
 ;
 ;

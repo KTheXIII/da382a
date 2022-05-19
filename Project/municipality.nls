@@ -1,0 +1,48 @@
+; File with functionality for municipalities
+; Each one of the three regions has its own municipality that is in charge of collecting taxes
+; and paying for social services.
+
+
+; FILE HISTORY:
+; 2022-05-18 Added this file with the dummy function 'serve-the-people'
+;
+;
+;---------------------------------------------------
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SETUP OF THE MUNICIPALITIES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+to setup-municipalities
+  
+  ; Municipality for region 1
+  create-municipalities 1 [
+    set region 1
+   ] ; 
+  
+  ; Municipality for region 2
+  create-municipalities 1 [
+    set region 2
+   ] ;
+  
+  ; Municipality for region 3
+  create-municipalities 1 [
+    set region 3
+   ] ;
+  
+end
+
+
+
+
+
+
+
+
+
+to serve-the-people
+;  ask voters [
+    ;to pay taxes
+    ;to distribute social welfare money
+;    ]
+end
