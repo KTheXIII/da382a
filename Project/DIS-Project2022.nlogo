@@ -32,6 +32,9 @@
 ; 2022-05-12 Added new file electionday for calculating election result stored in global variable resultlist with borda count. (Isac Pettersson, Christian Heisterkamp)
 ; 2022-05-18 Major revision of 'perceiving-environment' and proactive part, gks
 ; 2022-05-18 Added include file 'municipality.nls' and breeds for municipalities, gks
+; 2022-05-18 electionDay calculation, this function runs when electionDay button is press.
+;            The vote will be calculate and print out the the winning party with vote count.
+;            Authors: PK, ML, JS, AZ
 ; ************ INCLUDED FILES *****************
 __includes [
     "bdimod.nls" ; modified version that allows certain intentions to pass values along
