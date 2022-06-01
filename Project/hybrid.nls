@@ -1,0 +1,308 @@
+; File with functionality for hybrid architecture
+; 
+;
+
+
+; FILE HISTORY:
+; 2022-05-21 Added this file and moved the functions process-messages and perceive-environment
+; 2022-05-19 Updated working for campaign in proactive file. + Added new code under perceive-environment procedure to make the campain workers actually change state. IP, JS, AZ, CH
+
+;---------------------------------------------------
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions needed for the hybrid architecture
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+to process-messages
+; reads and interprets all the messages on the message-queue
+  ; -> updates beliefs and variables
+  ; -> adds intentions (=reactive procedures) onto the intention stack
+  ;OBS: do not activate own functions directly, since this might block the other parts!
+
+  let performative ""
+  let type-content ""
+  let msgcontent ""
+  let msg ""
+
+  while [get-message-no-remove != "no_message"] [
+    ; read the message
+    set msg get-message
+    ; read the performative, type and content of the message
+    set performative  get-performative msg
+    ; error?set type-content item 0 get-content msg
+    set type-content get-content msg
+    
+    ;debug
+    ;print (word "msg= " msg ", performative= " performative ", type-content= " type-content)
+
+    ; switch case on performatives and content, see https://stackoverflow.com/questions/69605859/how-do-i-do-a-switch-or-select-case-in-netlogo
+    (ifelse
+      (performative = "inform") [
+        let content (item 0 type-content)
+        (ifelse
+          (content = "pol_attitude") [
+                let xy item 1 type-content
+                add-intention (word "process_message " item 0 xy " " item 1 xy) "true"
+          ]
+          (type-content = "removed-from-list")[
+                let friend-id get-sender msg
+                add-intention (word "remove-friend " friend-id ) "true"]
+          [])
+      ]
+      (performative = "request") [
+        if type-content = "friend-request" [
+          let friend-id get-sender msg
+          let xyz item 1 get-content msg
+          add-intention (word "add-friend " friend-id " " xyz) "true"]
+      ]
+      (performative = "agree") [
+         if type-content = "friend-request" [
+          print "TODO: performative friend-request agree"]
+      ]
+      (performative = "cancel") [
+         if type-content = "friend-request" [
+         print "TODO: friend request cancel" ]
+      ]
+      (performative = "cfp") [
+        let content (item 0 type-content)
+        if content = "political_campaign" [
+            ;print "political campaign"
+            let xy item 1 type-content
+            let manager-id get-sender msg
+            add-intention (word "handle-cfp-campaign " manager-id " " xy) "true"
+          ]
+      ]
+      (performative = "propose") [
+         let canditate-id get-sender msg
+         let xyz item 1 get-content msg
+         set possibleCandidates lput (list canditate-id xyz) possibleCandidates
+         ;print word "propose possible candidates: " possibleCandidates
+         ; TODO: send a message to all of these candidates to activate the campaign
+         
+         ]
+      (performative = "refuse") [print "TODO: performative refused"  ]
+      (performative = "accept") [
+        ;print word "accept, type-content: " type-content 
+        let content (item 0 type-content)
+        if content = "political_campaign" [
+          ;print "accept-political_campaign" 
+          set politicalCampaignManagerId item 0 get-content msg
+           set campaignPolAttitude item 1 type-content
+           set current_status "campaign"
+         ]
+       ]
+      (performative = "job_request") [
+         if type-content = "job_received" [
+          ;print "great, I have received a job!!"
+          set flagEmployed true
+         ]
+         if type-content = "job_declined" [
+          ;print "bummer, my job application was declined"
+          set current_status "send-application"
+        ]
+      ]
+
+      [print "default of switch-case" ]
+    )
+   ] ; closing while-loop
+
+end
+
+to perceive-environment
+  ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
+
+
+  ;Perceiving time --------------
+
+  if flagNewDay [
+    ;print "New Day!"
+  ]
+
+  if flagNewWeek [
+    ;print "New Week!"
+    ;TODO: put function for reconsidering members in their network on the intention stack
+  ]
+
+  if flagNewMonth[
+    add-intention "update-pol-attitude" "true"
+  ]
+
+  if flagNewYear [	
+    ;print "New Year!"	
+
+    ; increase the age of the voter
+    ; set age age + 1  ; not activated until agents can die and be born
+
+    ; Increase job wage, if status is adult and not employed.	
+    if flagEmployed [	
+      set old_wage wage	
+      let yearly_increase random-float 0.08	
+      set yearly_increase yearly_increase + 1	
+      set wage wage * yearly_increase	
+    ]
+  ]
+
+
+  ; Determine changes in current_state dependent on beliefs
+  let next_state current_state
+  
+  (ifelse
+    (current_state = "initialState")[
+      (ifelse
+        (age < 18) [
+          set current_status "child"
+          set next_state "schooling"
+        ]
+        (age > 17 and flagEmployed) [
+          set current_status "adult"
+          set next_state "has-a-job"
+        ]
+        (age > 17 and not flagEmployed) [
+         set current_status "adult"
+         set next_state "has-no-job"
+        ]
+        (age > 83 ) [
+         set current_status "elderly"
+         set next_state "at-elderly-home"
+        ]
+        [] ;default for age
+      )
+    ]
+    (current_state = "schooling")[
+      if age > 17 [
+        set current_status "adult"
+        set next_state "has-no-job"
+        ]
+      ]
+    (current_state = "has-a-job")[
+      (ifelse
+        (not flagEmployed) [
+          set next_state  "has-no-job"
+        ]
+        (true) [;TODO: replace with condition for next state "feel confirmed"
+          set next_state "feel-confirmed"
+        ]
+       [] ; default
+      )
+      ]
+    (current_state = "has-no-job")[
+      (ifelse
+        (flagEmployed) [
+          set next_state  "has-a-job"
+        ]
+        (true) [;TODO: replace with condition for next state "looks for job"
+          set next_state "look-for-jobb"
+          set current_status "send-application"
+        ]
+
+        [] ;default
+      )
+    ]
+
+     (current_state = "look-for-jobb")[
+      if flagEmployed [
+        set next_state "has-a-job"
+        ]
+      ]
+
+    (current_state = "feel-confirmed")[ ;print "current state = feel-confirmed"
+    (ifelse
+        
+        (current_status = "campaign") [print "current status = feel-confirmed-campaign"
+          set next_state "working-for-campaign";TODO: replace with condition for applying for political campaign (received cfp?)
+          ; TODO: put positive answer to campaing manager on intention stack
+        ]
+        (false) [;TODO: replace with condition for accepting participating in political campaign (received confirmation?)
+          ; TODO: put political campaing function on function stack
+        ]
+      
+        
+        (false) [;TODO: replace with condition for next state have-friends, for example if completed a campaign
+          set next_state "have-friends"
+        ]
+        (levelOfEducation > 2 and ( wage / old_wage) > 1.05) [
+          set next_state  "gain-status"
+        ]
+
+        [] ;default
+      )
+    ]
+
+    (current_state = "working-for-campaign")[; print "current state = working for campaign"
+      (ifelse
+        (current_status = "campaign-flag")[
+          add-intention "working-for-campaign" "true"
+          ]
+          (current_status = "no-campaign") [
+          set next_state "feel-confirmed"
+          ]
+
+          [] ;default
+      )
+      ]
+    
+    (current_state = "gain-status")[
+      if false [ ; TODO: replace with condition for becoming campaign manager
+        ; put the function 'lead-campaign' on intention stack
+        ]
+      if false [ ; TODO: replace with condition for continuing being campaign manager, could be current_goal="campaign manager" for example
+        ; put the function 'lead-campaign' on intention stack
+        ]
+      ]
+
+
+    [
+        ; No default
+        ;print word "No case for: " current_state
+    ]
+  )
+  
+  ;debug print
+  ;if current_state = "feel-confirmed" [print (word "next state= " next_state ", currentstatus= " current_status)]
+  set current_state next_state
+  
+
+
+  ;TODO: the following code should be proactive and part of the state machine.
+  ; Remove from here!
+
+
+  if politicalCampaignManager = true [
+  if possibleCandidates != []
+  [
+   if length possibleCandidates > 10 [ set possibleCandidates sublist possibleCandidates 1 10]
+   foreach possibleCandidates
+   [
+   [index] ->
+   set campaignCandidates lput (list (item 0 index) (item 1 index)) campaignCandidates
+   let msg create-message "accept"
+   set msg add-content (list "political_campaign" item 1 index) msg
+   set msg add-receiver item 0 index msg
+   ;send msg
+   add-intention "send" msg
+   print word "campaignmanager sent accept message to: " possibleCandidates
+   ]
+
+   if length possibleCandidates < 3 [
+   add-intention "call-for-campaign-friends" "true"
+   ]
+
+   set possibleCandidates []
+   ; The campaignCandidates:
+   ;print campaignCandidates
+  ]
+  ]
+
+
+    ; Todo "Managern följer utvecklingen av agenternas current_pol_attitude för att se om summan ökar."
+    if politicalCampaignManager = true
+    [
+    ; ... Something here.
+    ]
+  ;---end remove from here!
+
+end ;- perceive-environment

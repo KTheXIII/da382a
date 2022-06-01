@@ -1,0 +1,48 @@
+; File with functionality regarding the political campaings
+
+; FILE HISTORY:
+; 2022-05-25 Added file
+;---------------------------------------------------
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Activating the Campaing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to activate-campaign [party]
+  ;party is a number between 0 and 4
+  
+  ; Finding a campaign manager, which has highest conviction for the party
+  let polManagerSet voters with [age > 17 and item 0 current_pol_attitude = party] ; maybe add:  and item 1 current_pol_attitude = 0 ]
+  let politicalCM max-one-of polManagerSet [matrix:get conviction-plane 0 party]
+  ;debug print
+  print (word "politicalCampaignManager found:  " politicalCM )
+  if politicalCM != nobody [
+      ask politicalCM [
+        ;TODO: add the campaign-task on the intention stack instead!
+        add-intention "call-for-campaign-friends" "true"   
+        set politicalCampaignManager true
+        set politicalCampaignManagerId who
+        set size 2
+      let col item party partycolor
+      set color col     
+      ]
+    ]
+
+end
+
+to call-for-campaign-friends
+  ; look for the friends that share the conviction for the same political party
+  let party item 1 current_pol_attitude
+  let partyFriends voters with [age > 17 and item 0 current_pol_attitude = party]
+  let nr floor(count partyFriends * 0.6)
+  if nr > 1 [
+    set partyFriends max-n-of nr partyFriends [matrix:get conviction-plane 0 party]
+  
+    ; invite these new friends to participate in the call for proposals cfp
+    let cfpMsg create-message "cfp"
+    set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
+    set cfpMsg add-multiple-receivers [who] of partyFriends cfpMsg
+    add-intention "send" cfpMsg
+  ]
+end

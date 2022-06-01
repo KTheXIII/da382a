@@ -333,9 +333,11 @@ to-report update-conv-plane [cvplane curconv value]
   matrix:set cvplane y x value
   
   ;insert the surrounding fields in the plane to 60% of value/levelOfEducation
-  let neighbvalue 0.6 * (value / levelOfEducation)  
+;;  let neighbvalue 0.6 * (value / levelOfEducation)  
+    let neighbvalue 0.6 * (value / levelOfEducation)  
   ;if the value is max (=500) than the neighbvalues are set to 100
-  if value = 500 [set neighbvalue 100]
+;;  if value = 500 [set neighbvalue 100]
+    if value = 100 [set neighbvalue 20]
   ;position to the left
   let xx x - 1
   if xx >= 0 [matrix:set cvplane y xx neighbvalue] ;only set this value if it is not the most left position

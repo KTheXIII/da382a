@@ -5,7 +5,7 @@
 ; 2022-04-14 Branch of "Chapter 5," week 15, TASK 5 with implementing the state machine and proactive parts. (Mouad, Reem, Petter)
 ; 2022-04-14 This code is included in the project.
 ; 2022-04-28 "Chapter 8" TASK 3 proactive behaviour in political campaign, added the state working-for-campaign and also updated proactive-behavior (Ademir Zjajo, Christian H, Isac Pettersson, Johan Skäremo, Rasmus Mathiasson)
-;
+; 2022-05-19 Updated "Chapter 8" task 3, implemented so working-for-campaign is actually happening to the workers. AZ, IP, JS, CH
 ;---------------------------------------------------
 
 
@@ -14,38 +14,36 @@
 ; Runs the current state
 to proactive-behavior  
 ; nothin else here but 'run current_state' ! 
-run current_state
+run  current_state
 end
 
 ; Definition of the states 
 
 ; -- State for the working agents --
 to working-for-campaign
-  print "Working for campaign"
-  
-  ;Subtask 2: Send political message to friends
-  let msg create-message "inform"
-  set msg add-content (list "pol-attitude" campaignPolAttitude) msg
-  set msg add-multiple-receivers friendsList msg
-  ;add-intention (word "send " msg) "true" ;
-  add-intention "send " msg
+      
+  ;Send political message to friends, once per day for a month
+  if flagNewDay [
+    set nrCampRounds nrCampRounds + 1
+    print (word "Agent: " who ", working for campaign, round: " nrCampRounds)
+    let msg create-message "inform"
+    set msg add-content (list "pol-attitude" campaignPolAttitude) msg
+    set msg add-multiple-receivers friendsList msg
+    ;add-intention (word "send " msg) "true" ;
+    add-intention "send " msg
 
+    if nrCampRounds = 30 [set current_status "no-campaign"
+      set nrCampRounds 0]; ending the campaign by changing status to get back into old state afterwards
+  ]
 end
 
 ; -- For process messages --
-to call-for-campaign-friends
-  set politicalCampaignManager true
-  let cfpMsg create-message "cfp"
-  set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
-  set cfpMsg add-multiple-receivers friendsList cfpMsg
-  ;add-intention (word "send " cfpMsg) "true"
-  add-intention "send" cfpMsg
-end
 
 to handle-cfp-campaign [managerid pol_attitude]
  ifelse random 2 = 0
  [
-  ; Accept
+  print "campaing accepted"
+    ; Accept
   let cfpMsg create-message "propose"
   set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-receiver managerid cfpMsg
@@ -53,7 +51,8 @@ to handle-cfp-campaign [managerid pol_attitude]
   add-intention "send " cfpMsg
  ]
  [
-  ; Decline
+  print "campaing declined"
+    ; Decline
   let cfpMsg create-message "refuse"
   set cfpMsg add-content (list "political_campaign" current_pol_attitude ) cfpMsg
   set cfpMsg add-receiver managerid cfpMsg
@@ -72,28 +71,37 @@ end
 to has-a-job
   ;print "Has a job!"
   if not flagEmployed [
-    set current_state [ -> has-no-job ]
+    set current_state "has-no-job"
   ]
 end
 
 ; Adult, do not have a job. 
 to has-no-job
-   set current_state [ -> look-for-job ]
-   ;print "unemployed"
+  ; print 'unemployed'
 end
 
 to feel-confirmed
    ;
 end
 
-to look-for-job
-  print "looking for job"
-  let jobMessage create-message "inform"
-  let myRegion region
-  let currentRegion [who] of (municipalities with [region = myRegion])
-  set jobMessage add-multiple-receivers currentRegion jobMessage
-  set jobMessage add-content "jobApply" jobMessage
-  send jobMessage
+to look-for-jobb
+  if current_status = "send-application" [
+    let rg region
+    let rec item 0 [who] of municipalities with [region = rg]
+  
+    let applyMsg create-message "job_request"
+    set applyMsg add-receiver rec applyMsg
+    ;set applyMsg add-receiver municipalities with [region = rg] applyMsg
+    set applyMsg add-content ("job_request") applyMsg
+    send applyMsg
+    ;print applyMsg
+    ; waiting for answer
+    set current_status "wait-for-answer"
+  ]
+  if current_status = "wait-for-answer" [
+    
+  ]
+  
 end
 
 

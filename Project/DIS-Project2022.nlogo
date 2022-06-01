@@ -32,9 +32,12 @@
 ; 2022-05-12 Added new file electionday for calculating election result stored in global variable resultlist with borda count. (Isac Pettersson, Christian Heisterkamp)
 ; 2022-05-18 Major revision of 'perceiving-environment' and proactive part, gks
 ; 2022-05-18 Added include file 'municipality.nls' and breeds for municipalities, gks
-; 2022-05-18 electionDay calculation, this function runs when electionDay button is press.
-;            The vote will be calculate and print out the the winning party with vote count.
-;            Authors: PK, ML, JS, AZ
+; 2022-05-21 Added include file 'hybrid.nls' holding the functions process-messages and perceive-environment
+; 2022-05-18 Added calculate-pluarlity-result calculation to the electionday file, this function runs when the Election button is pressed.
+;            The vote will be calculated and print out the the winning party with the vote count. Authors: PK, ML, JS, AZ
+; 2022-05-19 Updated working for campaign in proactive file. + Added new code under perceive-environment procedure to make the campain workers actually change state. IP, JS, AZ, CH
+; 2022-05-19 Debugged the code and changed all the (next-state [-> feel-confirmed]) to (next-state "feel-confirmed") and changing current_status instead of adding a campain flag to the belief. (IP)
+; 2022-05-19 Added a borda count and plurality plots in the interface (integrated to version 6A) (Mouad, Reem, Petter).
 ; ************ INCLUDED FILES *****************
 __includes [
     "bdimod.nls" ; modified version that allows certain intentions to pass values along
@@ -44,9 +47,8 @@ __includes [
     "polattitude.nls"
     "electionday.nls"
     "municipality.nls"
-  ;
-  ;
-
+    "hybrid.nls"
+    "polcampaign.nls"
 ]
 ; ********************end included files ********
 
@@ -90,6 +92,11 @@ globals [
 
   ; for the election results of the borda count
   resultlist
+  win_party
+  partieslist
+
+  ; for party-related functions
+  partycolor ; list with partycolors
 
   ; for different debugging flags
   debug-general
@@ -133,11 +140,13 @@ voters-own [
   campaignPolAttitude ; The political attitude for the campaign.
   campaignCandidates ; List of candidates that are participating in the campaign
   possibleCandidates ; Temporary list of agents that are proposing to be part of the campaign.
+  nrCampRounds ; number of rounds
   ]
 
 
 municipalities-own [
   region
+  jobapplicantslist
 ]
 ; *********************end agent-specific variables *************
 
@@ -150,12 +159,12 @@ patches-own [meaning]
 to setup
   clear-all
   ; set-up things, added by gks 2022-05-16
+  set partycolor [pink red green blue brown]
+  ; -- set up debug flags
   set debug-general true
   set debug-setup-pol-attitude false
   set debug-update-pol-attitude false
   set debug-update-conv-plane false
-  ; -- set up debug flags
-
   ;  -- set up time
   set flagNewDay false
   set flagNewWeek false
@@ -181,6 +190,7 @@ to setup
 
   ; resultlist for borda count
   set resultlist (list 0 0 0 0 0)
+  set partieslist (list (list 0 0) (list 0 0) (list 0 0) (list 0 0) (list 0 0))
 
   ; Create the regions
   setup-regions
@@ -194,9 +204,6 @@ to setup
   ; --- end create and setup voters
 
 
-  ; find political campaign manager(s)
-  ;ask voters [setup-campaign-manager]
-  setup-campaign-manager
   ; must be last in the setup-part:
   reset-ticks
   setup-plots
@@ -233,18 +240,29 @@ to go
   ; - Destiny
   ; - Municipality
 
-  ; Broadcaster
-  ; Sending political messages to random selection of agents
+
   if flagNewDay [
+    ; Broadcaster
+    ; Sending political messages to random selection of agents
     clear-links
     broadcasting
     wait 0.1
     clear-links
+
+    ; Municipalities reading their mail
+    ask municipalities [handle-messages]
+  ]
+
+  if flagNewWeek [
+    ; municipalities handle jobb-applications
+    ask municipalities [handle-jobb-applications]
+
   ]
 
   ; Destiny
   if flagNewMonth [
-  ; Changing the status of some random adults to from employed to unemployed
+  print "New month"
+    ; Changing the status of some random adults to from employed to unemployed
 
 
   ]
@@ -264,7 +282,7 @@ to go
   ; Trying to implement a Hybrid-Agent architecture with a ractive part running the intentions on
   ; the intention stack and the proactive part with a deliberation of status, states and goals
 ;
- ; Ask agents to do something.
+ ; Hybrid agent architecture:
   ask voters [
     process-messages ; process messages in the message-queue.
     perceive-environment ; updates beliefs about the environment
@@ -301,269 +319,13 @@ to broadcasting
     ;set informMsg add-receiver voters informMsg
     ;set informMsg add-receiver receiver informMsg
     set informMsg add-multiple-receivers receiver informMsg
-    ;;;set informMsg add-content (list "pol_attitude" (list random 5 random 3 1)) informMsg
-    ;;set informMsg add-content (list "pol_attitude" (list random 5 1)) informMsg ;experimenting with y
     set informMsg add-content (list "pol_attitude" (list random 5 random 3)) informMsg
     ;simulating take-over public media - gks, 2022-05-13
 ;    set informMsg add-content (list "pol_attitude" (list 4 random 3)) informMsg
-   ;set informMsg add-content (list "pol_attitude" (list random 2 0)) informMsg
     ;print word "Broadcasting msg: " informMsg
     send informMsg ; broadcaster needs to send out directly since it has not a handling of intention-stack
   ]
 end
-
-
-
-to process-messages
-; reads and interprets all the messages on the message-queue
-  ; -> updates beliefs and variables
-  ; -> adds intentions (=reactive procedures) onto the intention stack
-  ;OBS: may not activate own functions!
-
-  let performative ""
-  let type-content ""
-  let msgcontent ""
-  let msg ""
-
-  while [get-message-no-remove != "no_message"] [
-    ; read the message
-    set msg get-message
-    ; read the performative, type and content of the message
-    set performative  get-performative msg
-    set type-content item 0 get-content msg
-
-    ; switch case on performatives and content, see https://stackoverflow.com/questions/69605859/how-do-i-do-a-switch-or-select-case-in-netlogo
-    (ifelse
-      (performative = "inform") [
-        (ifelse
-          (type-content = "pol_attitude") [
-                let xyz item 1 get-content msg
-                add-intention (word "process_message " item 0 xyz " " item 1 xyz) "true"]
-          (type-content = "removed-from-list")[
-                let friend-id get-sender msg
-                add-intention (word "remove-friend " friend-id ) "true"]
-          (type-content = "jobApply")[
-            let sender get-sender msg
-            add-intention (word "look-for-job") "true"
-            ;compareJobApplies sender
-          ]
-          [])
-      ]
-      (performative = "request") [
-        if type-content = "friend-request" [
-          let friend-id get-sender msg
-          let xyz item 1 get-content msg
-          add-intention (word "add-friend " friend-id " " xyz) "true"]
-      ]
-      (performative = "agree") [
-         if type-content = "friend-request" [
-          print "TODO:"]
-      ]
-      (performative = "cancel") [
-         if type-content = "friend-request" [
-         print "TODO:" ]
-      ]
-      (performative = "cfp") [
-         if type-content = "political_campaign" [
-            let manager-id get-sender msg
-            let xyz item 1 get-content msg
-            add-intention (word "handle-cfp-campaign " manager-id " " xyz) "true"
-          ]
-      ]
-      (performative = "propose") [
-         let canditate-id get-sender msg
-         let xyz item 1 get-content msg
-         set possibleCandidates lput (list canditate-id xyz) possibleCandidates
-         ]
-      (performative = "refuse") [print "TODO:"  ]
-      (performative = "accept") [
-         if type-content = "political_campaign" [
-           set politicalCampaignManagerId item 0 get-content msg
-           set campaignPolAttitude item 1 get-content msg
-           add-belief create-belief "campaign-flag" true
-         ]
-       ]
-
-      [print "default of switch-case" ]
-    )
-   ] ; closing while-loop
-
-end
-
-to perceive-environment
-  ; rules to check through the belief-hashtable and to update variables, intentions, current_status, current_state
-
-
-  ;Perceiving time --------------
-
-  if flagNewDay [
-    ;print "New Day!"
-  ]
-
-  if flagNewWeek [
-    ;print "New Week!"
-    ;TODO: put function for reconsidering members in their network on the intention stack
-  ]
-
-  if flagNewMonth[
-    add-intention "update-pol-attitude" "true"
-  ]
-
-  if flagNewYear [	
-    ;print "New Year!"	
-
-    ; increase the age of the voter
-    ; set age age + 1  ; not activated until agents can die and be born
-
-    ; Increase job wage, if status is adult and not employed.	
-    if flagEmployed [	
-      set old_wage wage	
-      let yearly_increase random-float 0.08	
-      set yearly_increase yearly_increase + 1	
-      set wage wage * yearly_increase	
-    ]
-  ]
-
-
-  ; Determine changes in current_state dependent on beliefs
-  let next_state current_state
-  (ifelse
-    (current_state = "initialState")[
-      (ifelse
-        (age < 18) [
-          set current_status "child"
-          set next_state [-> schooling]
-        ]
-        (age > 17 and flagEmployed) [
-          set current_status "adult"
-          set next_state [-> has-a-job]
-        ]
-        (age > 17 and not flagEmployed) [
-         set current_status "adult"
-         set next_state [-> has-no-job]
-        ]
-        (age > 83 ) [
-         set current_status "elderly"
-         set next_state [-> at-elderly-home]
-        ]
-        [] ;default for age
-      )
-    ]
-    (current_state = "schooling")[
-      if age > 17 [
-        set current_status "adult"
-        set next_state [-> has-no-job]
-        ]
-      ]
-    (current_state = "has-a-job")[
-      (ifelse
-        (not flagEmployed) [
-          set next_state  [-> has-no-job]
-        ]
-        (false) [;TODO: replace with condition for next state "feel confirmed"
-          set next_state [-> feel-confirmed]
-        ]
-       [] ; default
-      )
-      ]
-    (current_state = "has-no-job")[
-      (ifelse
-        (flagEmployed) [
-          set next_state  [-> has-a-job]
-        ]
-        (true) [;TODO: replace with condition for next state "looks for job"
-          set next_state [-> look-for-job]
-        ]
-
-        [] ;default
-      )
-    ]
-
-     (current_state = "look-for-job")[
-      if flagEmployed [
-        set next_state [-> has-a-job]
-        ]
-      ]
-
-    (current_state = "feel-confirmed")[
-    (ifelse
-        (levelOfEducation > 0.05 and ( wage / old_wage) > 1.05) [
-          set next_state  [-> gain-status]
-        ]
-        (false) [;TODO: replace with condition for applying for political campaign (received cfp?)
-          ; TODO: put positive answer to campaing manager on intention stack
-        ]
-        (false) [;TODO: replace with condition for accepting participating in political campaign (received confirmation?)
-          ; TODO: put political campaing function on function stack
-        ]
-        (exist-beliefs-of-type "campaign-flag") [;TODO: check this condition for actively participating in political campaign (not finished yet)
-          add-intention "working-for-campaign" "true"
-        ]
-        (false) [;TODO: replace with condition for next state have-friends, for example if completed a campaign
-          set next_state [-> have-friends]
-        ]
-
-        [] ;default
-      )
-    ]
-
-    (current_state = "gain-status")[
-      if false [ ; TODO: replace with condition for becoming campaign manager
-        ; put the function 'lead-campaign' on intention stack
-        ]
-      if false [ ; TODO: replace with condition for continuing being campaign manager, could be current_goal="campaign manager" for example
-        ; put the function 'lead-campaign' on intention stack
-        ]
-      ]
-
-
-    [
-        ; No default
-        ;print word "No case for: " current_state
-    ]
-  )
-  set current_state next_state
-
-
-
-  ;TODO: the following code should be proactive and part of the state machine.
-  ; Remove from here!
-
-
-  if politicalCampaignManager = true [
-  if possibleCandidates != []
-  [
-   if length possibleCandidates > 10 [ set possibleCandidates sublist possibleCandidates 1 10]
-   foreach possibleCandidates
-   [
-   [index] ->
-   set campaignCandidates lput (list (item 0 index) (item 1 index)) campaignCandidates
-   let msg create-message "accept"
-   set msg add-content (list "political_campaign" item 1 index) msg
-   set msg add-receiver item 0 index msg
-   ;send msg
-   add-intention (word "send " msg) "true"
-   ]
-
-   if length possibleCandidates < 3 [
-   add-intention "call-for-campaign-friends" "true"
-   ]
-
-   set possibleCandidates []
-   ; The campaignCandidates:
-   ;print campaignCandidates
-  ]
-  ]
-
-
-    ; Todo "Managern följer utvecklingen av agenternas current_pol_attitude för att se om summan ökar."
-    if politicalCampaignManager = true
-    [
-    ; ... Something here.
-    ]
-  ;---end remove from here!
-
-end ;- perceive-environment
 
 
 
@@ -597,10 +359,10 @@ ticks
 30.0
 
 SWITCH
-3
-502
-132
-535
+2
+92
+131
+125
 show-intentions
 show-intentions
 1
@@ -608,25 +370,25 @@ show-intentions
 -1000
 
 SLIDER
-3
-457
-191
-490
+2
+47
+190
+80
 num-agents
 num-agents
 5
 700
-427.0
+415.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-4
-39
-67
-72
+5
+10
+68
+43
 setup
 setup
 NIL
@@ -640,10 +402,10 @@ NIL
 1
 
 BUTTON
-140
-40
-203
-73
+139
+10
+202
+43
 go
 go
 T
@@ -658,9 +420,9 @@ NIL
 
 INPUTBOX
 142
-520
+89
 192
-580
+149
 tickNum
 1.0
 1
@@ -776,10 +538,10 @@ PENS
 "default" 1.0 1 -955883 true "histogram [levelOfEducation] of voters with [region = 3]" "histogram [levelOfEducation] of voters with [region = 3]"
 
 SWITCH
-3
-546
-131
-579
+2
+136
+130
+169
 show_messages
 show_messages
 1
@@ -787,10 +549,10 @@ show_messages
 -1000
 
 PLOT
-5
-106
-205
-256
+3
+255
+203
+405
 Political attitude
 political spectrum
 Nr voters
@@ -806,29 +568,11 @@ PENS
 "region2" 1.0 1 -10899396 true "histogram [item 0 current_pol_attitude] of voters with [region = 2]" "histogram [item 0 current_pol_attitude] of voters with [region = 2]"
 "region1" 1.0 1 -13345367 true "histogram [item 0 current_pol_attitude] of voters with [region = 1]" "histogram [item 0 current_pol_attitude] of voters with [region = 1]"
 
-PLOT
-5
-281
-205
-431
-alternative Political attitude
-political spectrum
-Nr voters
-0.0
-10.0
-0.0
-10.0
-true
-false
-"set-plot-x-range 0 5\nset-plot-y-range 0 count voters / 3\nset-histogram-num-bars 5" ""
-PENS
-"default" 1.0 1 -16777216 true "set-plot-x-range 0 5\nset-plot-y-range 0 count voters\nset-histogram-num-bars 5\nhistogram [item 0 current_pol_attitude] of voters with [age > 17]" ""
-
 SWITCH
-1
-589
-128
-622
+0
+179
+127
+212
 show_beliefs
 show_beliefs
 1
@@ -836,10 +580,10 @@ show_beliefs
 -1000
 
 SWITCH
-3
-639
-119
-672
+1
+215
+117
+248
 show_lines
 show_lines
 0
@@ -847,12 +591,191 @@ show_lines
 -1000
 
 BUTTON
-78
-68
-133
-101
+76
+10
+131
+43
 Election
-calculate-result
+calculate-result\ncalculate-plurality-result\nupdate-plots
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+1
+480
+103
+525
+Plurality winner:
+plurality-winner
+17
+1
+11
+
+MONITOR
+0
+530
+148
+575
+Plurality winner (blocks):
+plurality-winner-blocks
+17
+1
+11
+
+PLOT
+3
+581
+203
+731
+Plurality (Blocks)
+Political blocks
+Votes
+0.0
+3.0
+0.0
+500.0
+true
+true
+"" "clear-plot"
+PENS
+"Left" 1.0 1 -2674135 true "" "plotxy 0 (item 1 item 0 partieslist + item 1 item 1 partieslist )"
+"Center" 1.0 1 -13840069 true "" "plotxy 1 item 1 item 2 partieslist "
+"Right" 1.0 1 -13791810 true "" "plotxy 2 (item 1 item 3 partieslist + item 1 item 4 partieslist )"
+
+PLOT
+210
+583
+410
+733
+Borda count
+Political parties
+Votes
+0.0
+5.0
+0.0
+1000.0
+true
+true
+"" "clear-plot"
+PENS
+"Left" 1.0 1 -2674135 true "" "plotxy 0 item 0 resultlist"
+"Soc" 1.0 1 -2139308 true "" "plotxy 1 item 1 resultlist"
+"Mid" 1.0 1 -13840069 true "" "plotxy 2 item 2 resultlist"
+"Cons" 1.0 1 -14454117 true "" "plotxy 3 item 3 resultlist"
+"Right" 1.0 1 -6459832 true "" "plotxy 4 item 4 resultlist"
+
+PLOT
+415
+583
+615
+733
+Borda Count (Blocks)
+Political blocks
+Votes
+0.0
+3.0
+0.0
+1000.0
+true
+true
+"" "clear-plot"
+PENS
+"Left" 1.0 1 -2674135 true "" "plotxy 0 (item 0 resultlist + item 1 resultlist)"
+"Center" 1.0 1 -13840069 true "" "plotxy 1 item 2 resultlist"
+"Right" 1.0 1 -13791810 true "" "plotxy 2 (item 3 resultlist + item 4 resultlist)"
+
+TEXTBOX
+848
+589
+1106
+673
+Activation of political campaigns:\n- a campaign manager is chosen\n- campaign helpers are found with Contract Network
+11
+0.0
+1
+
+BUTTON
+1120
+622
+1324
+655
+Campaign for socialist party
+activate-campaign 1
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1120
+661
+1324
+694
+Campaing for middle party
+activate-campaign 2
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1119
+698
+1323
+731
+Campaign for conservative party
+activate-campaign 3
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1120
+736
+1323
+769
+Campaign for right party
+activate-campaign 4
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1118
+583
+1324
+616
+Campaign for left party
+activate-campaign 0
 NIL
 1
 T

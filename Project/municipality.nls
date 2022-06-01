@@ -18,21 +18,86 @@ to setup-municipalities
   ; Municipality for region 1
   create-municipalities 1 [
     set region 1
+    setxy 33 25
+    set shape "house"
+    set size 2
+    set color black
    ] ; 
   
   ; Municipality for region 2
   create-municipalities 1 [
     set region 2
+    setxy 33 18
+    set shape "house"
+    set size 2
+    set color black
    ] ;
   
   ; Municipality for region 3
   create-municipalities 1 [
     set region 3
+    setxy 33 5
+    set shape "house"
+    set size 2
+    set color black
    ] ;
+  
+  ask municipalities [
+    set intentions []
+    set beliefs []
+    set incoming-queue []
+    set jobapplicantslist []
+  ]
 end
 
-to compareJobApplies [sender]
-  print sender
+to handle-messages
+  let performative ""
+  let type-content ""
+  let msgcontent ""
+  let msg ""
+
+  while [get-message-no-remove != "no_message"] [
+    ; read the message
+    set msg get-message
+    ; read the performative, type and content of the message
+    set performative  get-performative msg
+    ;print performative
+    set type-content item 0 get-content msg
+    
+    if performative = "job_request" [
+      ; add the receiver to the jobapplicantslist
+      set jobapplicantslist lput get-sender msg jobapplicantslist
+      set jobapplicantslist remove-duplicates jobapplicantslist ;removes duplicates in the case if a voter sends several applications before getting the answer
+      ; debug print
+      ;print word "jobbapplicantslist: " jobapplicantslist 
+    ]
+    
+  ]
+  
+end
+
+to handle-jobb-applications
+  ; TODO: the winner should be selected based on requirements regarding age, education, region?, current wage, etc.
+  
+  ;print "in handling jobb applications"
+  ;randomly picking one of the applicants
+  let nrinlist length jobapplicantslist
+  if nrinlist > 0 [ ;test if not empty job-list
+    let winner item random nrinlist jobapplicantslist
+    set jobapplicantslist remove winner jobapplicantslist
+    ; informing the winner
+    let applyMsg create-message "job_request"
+    set applyMsg add-receiver winner applyMsg
+    ;set applyMsg add-receiver municipalities with [region = rg] applyMsg
+    set applyMsg add-content ("job_received") applyMsg
+    send applyMsg
+    ;print (word "agent: " winner " has gotten a job!")
+    ; informing the loosers
+    set applyMsg create-message "job_request"
+    set applyMsg add-multiple-receivers jobapplicantslist applyMsg
+    set applyMsg add-content ("job_declined") applyMsg
+    send applyMsg
+  ]
 end
 
 
@@ -48,6 +113,4 @@ to serve-the-people
     ;to pay taxes
     ;to distribute social welfare money
 ;    ]
-  
-  print "hejhejhej"
 end

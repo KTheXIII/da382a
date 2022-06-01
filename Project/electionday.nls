@@ -9,16 +9,18 @@
 ;            in histogram YET.
 ;            Authors: Christian Heisterkamp (CH), Isac Pettersson (IP)
 ;
-;
+; 2022-05-19 Added a borda count and plurality plots in the interface (Mouad, Reem, Petter).
+; 2022-05-19 Fixed a bug in calculate-result.
 ;---------------------------------------------------
 
 
 to calculate-result
+  set resultlist (list 0 0 0 0 0) ; <------ Reset the result list. (Mouad, Reem, Petter)
   ask voters [
     let worth 3
     let i 0
     let pol_ranking_length length current_pol_ranking 
-    show current_pol_ranking
+    ;show current_pol_ranking
     repeat pol_ranking_length [ 
       let oldvalue item (item i current_pol_ranking) resultlist
       let newvalue worth + oldvalue
@@ -28,7 +30,13 @@ to calculate-result
     ]
   ]
   show resultlist
+  ;histogram resultlist
+end
 
+
+;Plurality calculation of the election to then print the winning party. 
+to calculate-plurality-result
+  set partieslist (list (list 0 0) (list 0 0) (list 0 0) (list 0 0) (list 0 0)) ; <------ Reset the result list. (Mouad, Reem, Petter)
   let num_of_election_voters round(0.7 * count voters)
   let parties n-values attitude_cols [i -> list i 0]
   ask n-of num_of_election_voters voters [
@@ -39,13 +47,71 @@ to calculate-result
     set parties replace-item x parties list index (value + 1)
   ]
   let highest 0
-  let win_party [0 0]
+  set win_party [0 0]
   foreach parties [value ->
     if item 1 value > highest [
       set win_party value
       set highest item 1 value
     ]
   ]
+  set partieslist parties
   print (word "parties: " parties)
   print (word "party " item 0 win_party " won, with " item 1 win_party " votes.")
+end
+
+; 2022-05-23 Used for the added plots in the interface. (Mouad, Reem, Petter)
+to-report plurality-winner
+  (ifelse
+    item 0 win_party = 0 [
+      report "Left"
+    ]
+    item 0 win_party = 1 [
+      report "Soc"
+    ]
+    item 0 win_party = 2 [
+      report "Center"
+    ]
+    item 0 win_party = 3 [
+      report "Cons"
+    ]
+    item 0 win_party = 4 [
+      report "Right"
+    ]
+    ; elsecommands
+    [
+      report "N/A"
+    ])
+end
+
+; 2022-05-23 Used in the added plots. (Mouad, Reem, Petter)
+; Calculates the plurality winner of blocks.
+to-report plurality-winner-blocks
+  ; item 0 Left block
+  ; item 1 Center
+  ; item 2 Right block
+  let block_parties (list (item 1 item 0 partieslist + item 1 item 1 partieslist) (item 1 item 2 partieslist ) (item 1 item 3 partieslist + item 1 item 4 partieslist ))
+  let highestblock -1
+  
+  foreach block_parties [
+    [ index ] ->
+    if index > highestblock [
+      set highestblock index
+    ]
+  ]
+  if highestblock != 0 [
+    (ifelse
+    position highestblock block_parties = 0 [
+      report "Left block"
+    ]
+    position highestblock block_parties  = 1 [
+      report "Center"
+    ]
+    position highestblock block_parties  = 2 [
+      report "Right block"
+    ]
+    ; elsecommands
+    [
+      report "N/A"
+    ])
+  ]
 end

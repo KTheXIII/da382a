@@ -12,6 +12,7 @@
 ; 2022-04-21 Added setup-heatmap call in setup-voter function Authors: Eric Lundin, Pratchaya Khansomboon.
 ; 2022-04-27 heatmap functions moved to polattitude.nls (gks)
 ; 2022-05-12 adding task managers för parti 0, TODO add conviction score and several tests (new method calls) (Arian Shaafi and Christian Sjösvärd)
+; 2022-05-19 loop to select a campainmaneger for each political party (each party manager has a diffrent color) (Arian Shaafi and Christian Sjösvärd)
 ;
 ;---------------------------------------------------
 
@@ -98,7 +99,8 @@ to setup-voters
     set possibleCandidates []
     set campaignCandidates []
     set politicalCampaignManager false
-    ;setup-pol-attitude ; changed by gks, 2022-05-14 comes too early here, the voters need a setup of education level
+    set nrCampRounds 0
+    
     
     ;temporary test-code for proactive behavior
     ; Initial status and state
@@ -117,6 +119,7 @@ to setup-voters
   setup-educationLevel
    ; Define the political planes and message planes, etc
   ask voters [setup-pol-attitude] ;changed by gks, 2022-05-14
+  setup-employment
   setup-monthlyWage
   setup-familyList
    ; test to fill friendsList
@@ -265,7 +268,27 @@ end
 
 ;TODO:
 to setup-employment
+; see point 7) on pg 24 in the project description
+; for all the agents in the age 20-64 years with a level of education lower than ‘PoG’  (=1, 2): 
+; - set 15% of the agent in region I to unemployed
+; - 9 % for region II 
+; - and 3% for region III 
 
+; counting the number of agents in each region 
+  let agentNrRg1 count voters with [age > 19 and age < 65 and levelOfEducation < 3 and region = 1] 
+  let agentNrRg2 count voters with [age > 19 and age < 65 and levelOfEducation < 3 and region = 2] 
+  let agentNrRg3 count voters with [age > 19 and age < 65 and levelOfEducation < 3 and region = 3] 
+  
+  ;debugprint
+  ;print (word "agReg1= " agentNrRg1 ", agReg2= " agentNrRg2 ", agReg3= " agentNrRg3)
+  ask n-of floor(agentNrRg1 * (0.15)) voters with [(levelOfEducation < 3) and (region = 1)]
+                                                       [set flagEmployed false]
+  ask n-of floor(agentNrRg2 * (0.09)) voters with [(levelOfEducation < 3) and (region = 2)]
+                                                       [set flagEmployed false]
+  ask n-of floor(agentNrRg3 * (0.03)) voters with [(levelOfEducation < 3) and (region = 3)]
+                                                       [set flagEmployed false]
+  ; TODO: set the political attitudes of unemployed adults to:
+  ; 12,6% left, 39,5% s, 9,3% m, 21,1% c, 15,7% r
 end
 
 
@@ -308,6 +331,8 @@ to setup-monthlyWage
       set wage 25000
     ])
   ]
+  
+  ask voters [set old_wage wage]
 end
 
 to setup-familyList
@@ -333,27 +358,6 @@ to setup-familyList
   ] 
   
 end
-
-to setup-campaign-manager 
-  ; finding the voter age >17 with the currently highest conviction for left democratic party
-  let polManagerSet voters with [age > 17 and item 0 current_pol_attitude = 0 and item 1 current_pol_attitude = 0 ]
-  let politicalCM max-one-of polManagerSet [matrix:get conviction-plane 0 0]
-  ;debug print
-  print (word "politicalCampaignManager found" politicalCM )
-  if politicalCM != nobody [
-   ask politicalCM [
-      ;TODO: add the campaign-task on the intention stack instead!
-      add-intention "call-for-campaign-friends" "true"   
-      set politicalCampaignManager true
-      set politicalCampaignManagerId who
-      print "The Manager"
-      set size 2
-      set color red
-    ]
-    
-  
-  ]  
-end 
 
 
 ;preliminary, should be replaced with proactive method later
